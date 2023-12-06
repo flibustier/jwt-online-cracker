@@ -16,6 +16,10 @@ defineEmits(['clicked', 'clicked-cancel'])
 </template>
 
 <style scoped>
+button {
+  font-family: inherit;
+}
+
 .kave-btn {
   position: relative;
   background: none;
@@ -121,7 +125,7 @@ defineEmits(['clicked', 'clicked-cancel'])
   background: hsla(33, 100%, 50%, 1);
 }
 
-.kave-btn.pulsate {
+.kave-btn.pulsate:not(.canceled) {
   animation: pulsate 3s linear infinite alternate;
 }
 

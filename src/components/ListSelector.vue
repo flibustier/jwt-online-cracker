@@ -15,7 +15,6 @@ const scrollToSelected = () => {
   selectedRef.value?.scrollIntoView({
     behavior: 'smooth',
     block: 'center',
-    inline: 'center'
   })
 }
 
@@ -89,8 +88,8 @@ onUnmounted(() => {
 
 <style scoped>
 ul {
-  height: 9rem;
-  width: 25rem;
+  height: 10rem;
+  width: 30rem;
   overflow-y: scroll;
   list-style: none;
   text-align: center;
@@ -108,6 +107,8 @@ li {
   transition: all 0.3s ease;
   cursor: pointer;
   font-size: 0.9rem;
+  font-family: inherit;
+  text-transform: none;
 }
 
 li.disabled {

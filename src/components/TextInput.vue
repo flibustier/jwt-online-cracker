@@ -28,6 +28,9 @@ textarea {
   width: 100%;
   padding: 1rem;
   border-radius: 1rem;
+  font-family: inherit;
+  text-transform: none;
+  caret-color: var(--color-accent);
 }
 
 textarea:disabled {
