@@ -1,16 +1,101 @@
-@import './base.css';
+@font-face {
+  font-family: 'Source Code Pro';
+  src: url('fonts/SourceCodePro-VariableFont_wght.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Axeon';
+  src: url('fonts/Axeon.ttf') format('truetype');
+}
+
+/* color palette from <https://github.com/vuejs/theme> */
+:root {
+  --vt-c-white: #ffffff;
+
+  --vt-c-black: #181818;
+  --vt-c-black-soft: #222222;
+  --vt-c-black-mute: #282828;
+
+  --vt-c-indigo: #2c3e50;
+
+  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
+  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
+
+  --vt-c-text-dark-1: var(--vt-c-white);
+  --vt-c-text-dark-2: rgba(235, 235, 235, 0.74);
+}
+
+/* semantic color variables for this project */
+:root {
+  --color-background: var(--vt-c-black);
+  --color-background-soft: var(--vt-c-black-soft);
+  --color-background-mute: var(--vt-c-black-mute);
+
+  --color-border: var(--vt-c-divider-dark-2);
+  --color-border-hover: var(--vt-c-divider-dark-1);
+
+  --color-heading: var(--vt-c-text-dark-1);
+  --color-text: var(--vt-c-text-dark-2);
+
+  --color-accent: hsla(180, 100%, 50%, 1);
+  --color-accent-soft: hsla(180, 100%, 50%, 0.2);
+
+  --color-warning: hsla(33, 100%, 50%, 1);
+
+  --section-gap: 160px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  font-weight: normal;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--color-text);
+  background: var(--color-background);
+  line-height: 1.2;
+  font-family:
+    'Source Code Pro',
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
+  font-size: 1rem;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 #app {
-  max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
 
   font-weight: normal;
 }
 
+h1 {
+  font-family: 'Axeon';
+}
+
+a {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 a,
 .accent {
-  text-decoration: none;
   color: var(--color-accent);
 }
 
@@ -24,7 +109,7 @@ a,
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   body {
     display: flex;
     place-items: center;
