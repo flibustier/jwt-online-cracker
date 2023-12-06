@@ -1,0 +1,1 @@
+export const SUPPORTED_ALGORITHM = ['HS256', 'HS384', 'HS512']

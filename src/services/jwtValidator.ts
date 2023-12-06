@@ -1,4 +1,4 @@
-const SUPPORTED_ALGORITHM = ['HS256', 'HS384', 'HS512']
+import { SUPPORTED_ALGORITHM } from './constants'
 
 const decodeHeader = (token: string) => {
   const parts = token.split('.')
@@ -42,9 +42,9 @@ const validateHmacAlgorithmHeader = (token: string) => {
   }
 
   if (!SUPPORTED_ALGORITHM.includes(decodedHeader.alg)) {
-    throw `Unsupported algorithm <b class="warning">${decodedHeader.alg}</b>. Only ${SUPPORTED_ALGORITHM.join(
-      ', '
-    )} are supported.`
+    throw `Unsupported algorithm <b class="warning">${
+      decodedHeader.alg
+    }</b>. Only ${SUPPORTED_ALGORITHM.join(', ')} are supported.`
   }
 }
 
