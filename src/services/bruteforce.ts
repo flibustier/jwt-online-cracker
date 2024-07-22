@@ -45,6 +45,26 @@ export default class BruteForce {
     })
   }
 
+  private dispatchWordsToWorkers = (words: string[]) => {
+    if (words.length > 0) {
+      const wordsPerWorker = Math.floor(words.length / this.workerPool.length)
+      this.workerPool.forEach((_worker, index) => {
+        const sliceStart = index * wordsPerWorker
+        // last worker get all remaining
+        const sliceEnd =
+          index === this.workerPool.length - 1 ? undefined : (index + 1) * wordsPerWorker
+        const slice = words.slice(sliceStart, sliceEnd)
+
+        // if slice is too big, we send it in multiple smaller chunks
+        for (let i = 0; i < slice.length; i += MAX_WORKER_SLICE) {
+          const chunk = slice.slice(i, i + MAX_WORKER_SLICE)
+          this.sendSliceToWorker(index, chunk)
+          this.wordsSent += chunk.length
+        }
+      })
+    }
+  }
+
   private get downloadPercent() {
     return Math.trunc((this.downloaded / this.dictionarySize) * 100)
   }
@@ -61,15 +81,20 @@ export default class BruteForce {
     this.initWorkers(onProgress, onSucceeded)
   }
 
-  public startAlphabet = async (alphabetString: string, startLength: number = 0, maxLength: number = 6) => {
+  public startAlphabet = async (
+    alphabetString: string,
+    startLength: number = 0,
+    maxLength: number = 6
+  ) => {
+    // deduplicate
     const alphabet = [...new Set(alphabetString.split(''))]
+
+    this.wordsRemaining =
+      Math.pow(alphabet.length, maxLength) - Math.pow(alphabet.length, startLength)
+
+    console.log(`starting brute-force of ${this.wordsRemaining} combinations`)
     /*
     const iterator = makeAlphabetCombinationsIterator(alphabet, 1, MAX_LENGTH)
-*/
-    this.wordsRemaining = Math.pow(alphabet.length, maxLength) - Math.pow(alphabet.length, startLength)
-    
-    console.log(this.wordsRemaining)
-    /*
     let iteration = iterator.next()
     while (!iteration.done) {
       await this.sendSliceToWorker(0, iteration.value)
@@ -80,9 +105,7 @@ export default class BruteForce {
     console.log('done')
     */
     const combinator = new CombinatorWorker()
-
-    combinator.onmessage = (e) => this.sendSliceToWorker(0, e.data)
-
+    combinator.onmessage = (e) => this.dispatchWordsToWorkers(e.data)
     combinator.postMessage({ alphabet, startLength, maxLength })
   }
 
@@ -107,23 +130,8 @@ export default class BruteForce {
       }
       splitWord = words.pop()
 
-      if (words.length > 0) {
-        const wordsPerWorker = Math.floor(words.length / this.workerPool.length)
-        this.workerPool.forEach((_worker, index) => {
-          const sliceStart = index * wordsPerWorker
-          // last worker get all remaining
-          const sliceEnd =
-            index === this.workerPool.length - 1 ? undefined : (index + 1) * wordsPerWorker
-          const slice = words.slice(sliceStart, sliceEnd)
+      this.dispatchWordsToWorkers(words)
 
-          // if slice is too big, we send it in multiple smaller chunks
-          for (let i = 0; i < slice.length; i += MAX_WORKER_SLICE) {
-            const chunk = slice.slice(i, i + MAX_WORKER_SLICE)
-            this.sendSliceToWorker(index, chunk)
-            this.wordsSent += chunk.length
-          }
-        })
-      }
       this.wordsRemaining += words.length
       this.downloaded += chunk.length
       onDownloadProgress(this.downloadPercent)
