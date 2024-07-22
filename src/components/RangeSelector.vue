@@ -31,8 +31,6 @@ const id = 'range-' + Math.random().toString(36).substring(2, 11)
   margin-top: 1rem;
 }
 
-/********** Range Input Styles **********/
-/*Range Reset*/
 input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
@@ -55,7 +53,7 @@ input[type='range']::-webkit-slider-runnable-track,
 input[type='range']::-moz-range-track {
   background-color: #115e5e;
   border-radius: 0.5rem;
-  height: 0.1rem;
+  height: 2px;
 }
 
 /* slider thumb */
@@ -65,12 +63,11 @@ input[type='range']::-webkit-slider-thumb {
   margin-top: -12px; /* Centers thumb on the track */
 }
 input[type='range']::-moz-range-thumb {
-  border: none; /*Removes extra border that FF applies*/
-  border-radius: 0; /*Removes default border-radius that FF applies*/
+  border: none; /* Removes extra border that FF applies */
+  border-radius: 0; /* Removes default border-radius that FF applies */
 }
 input[type='range']::-moz-range-thumb,
 input[type='range']::-webkit-slider-thumb {
-  /*custom styles*/
   background-color: var(--color-accent);
   height: 1rem;
   width: 0.1rem;
