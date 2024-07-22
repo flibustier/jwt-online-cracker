@@ -1,11 +1,12 @@
-<div style="display: flex; gap: 2rem; justify-content: center">
-    <img src="./docs/logo.gif" height="100" />
-    <h1>JWT Online Cracker</h1>
+<div align=center>
+    <h1>
+    <img src="https://github.com/user-attachments/assets/e93900d2-3fbb-4724-8d26-69659f2c5994" alt="JWT Online Cracker" />
+    </h1>
 </div>
 
 Brute-force HS256, HS384 or HS512 JWT Token from your browser. Using exclusively 100% client-side JavaScript. No installation needed.
 
-![](./docs/demo.mov)
+https://github.com/user-attachments/assets/61c2abd2-5832-433a-bc92-54411db8860e
 
 Made with [Vue 3](https://vuejs.org) (with TypeScript) using web workers and a futuristic looking UI.
 
