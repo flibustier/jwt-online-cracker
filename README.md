@@ -5,7 +5,9 @@
 
 Brute-force HS256, HS384 or HS512 JWT Token from your browser. Using exclusively 100% client-side JavaScript. No installation needed.
 
-Made with Vue 3 (with TypeScript) using web workers and a futuristic looking UI.
+![](./docs/demo.mov)
+
+Made with [Vue 3](https://vuejs.org) (with TypeScript) using web workers and a futuristic looking UI.
 
 Contributions are welcome!
 
