@@ -12,6 +12,7 @@ import RangeSelector from './components/RangeSelector.vue'
 import { validateJWT, getAlgorithm } from './services/jwtValidator'
 import { listDictionaries } from './services/dictionaryFetcher'
 import BruteForce from './services/bruteforce'
+/* import StopWatch from './components/StopWatch.vue' */
 
 enum Method {
   dictionary = 'dictionary',
@@ -21,6 +22,7 @@ enum Method {
 const DEFAULT_ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 const DEFAULT_DICTIONARY = 'scraped-JWT-secrets.txt'
 const DEFAULT_ALPHABET_MAX_LENGTH = 6
+const ALPHABET_WARNING_COMPLEXITY_THRESHOLD = 10_000_000
 
 const token = ref('')
 const tokenLocked = ref(false)
@@ -31,6 +33,7 @@ const alphabetMaxLength = ref(DEFAULT_ALPHABET_MAX_LENGTH)
 const dictionaryList = ref([] as any[])
 const dictionarySelected = ref()
 const dictionaryLocked = ref(false)
+const startButtonRef = ref()
 const start = ref()
 const done = ref(false)
 const downloadProgress = ref(0)
@@ -41,7 +44,8 @@ const secret = ref()
 const isTokenValid = computed(() => validateJWT(token.value)[0])
 const errorOutput = computed(() => validateJWT(token.value)[1])
 const tokenAlgorithm = computed(() => getAlgorithm(token.value))
-const alphabetComplexity = computed(() => Math.pow(alphabet.value.length, alphabetMaxLength.value))
+const alphabetLength = computed(() => new Set(alphabet.value.split('')).size)
+const alphabetComplexity = computed(() => Math.pow(alphabetLength.value, alphabetMaxLength.value))
 const step = computed(() => {
   if (token.value.length === 0 || secret.value) {
     return 0
@@ -59,6 +63,9 @@ onMounted(async () => {
 
 watch([tokenLocked, method, alphabetLocked, dictionaryLocked], () => {
   start.value = false
+  if (!tokenLocked.value) {
+    method.value = undefined
+  }
   if (method.value === Method.dictionary || !tokenLocked.value) {
     alphabetLocked.value = false
   }
@@ -114,14 +121,16 @@ const onStart = async () => {
 const onStop = () => {
   bruteForceService.cancel()
 
-  const endTime = new Date()
-  const timeDiff = endTime.getDate() - start.value.getDate()
-
-  // get seconds
-  var seconds = Math.round(timeDiff)
+  const timeDiff = (new Date() as any) - start.value
+  var seconds = Math.round(timeDiff / 1000)
   console.log(seconds + ' seconds')
 
   start.value = false
+}
+
+const fullReset = () => {
+  tokenLocked.value = false
+  token.value = ''
 }
 
 const reset = () => {
@@ -135,9 +144,23 @@ const demo = (x = 0) => {
       ? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBEb2UifQ.xuEv8qrfXu424LZk8bVgr9MQJUIrp1rHcPyZw_KSsds'
       : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBEb2UifQ.K7Vl1zizbqZsrKQCpvfs2yHJ8wg6vJufLYHbYHaiWPo'
   tokenLocked.value = true
-  method.value = Method.dictionary
-  dictionaryLocked.value = true
+  setTimeout(() => (method.value = Method.dictionary), 750)
+  setTimeout(() => {
+    dictionaryLocked.value = true
+    //scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+    scrollToStartButton()
+  }, 1500)
 }
+
+const scrollToStartButton = () =>
+  setTimeout(() => {
+    if (startButtonRef.value) {
+      startButtonRef.value.$el.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      })
+    }
+  }, 1000)
 </script>
 
 <template>
@@ -150,32 +173,41 @@ const demo = (x = 0) => {
         :second-percent="progress"
       />
     </div>
+    <!--StopWatch :start="!!start" /-->
+
     <div class="title" v-if="!start && !done">
       <template v-if="token.length === 0">
         <h1 class="accent">JWT Online Cracker</h1>
         <h3>
           Brute-force <b>HS256</b>, <b>HS384</b> or <b>HS512</b> JWT Token from your browser.<br />
           No installation needed.<br />
-          <a @click="demo()">Demo</a>, <a @click="demo(1)">Code</a>
+          <a @click="demo()">Demo</a>,
+          <a
+            href="https://github.com/flibustier/jwt-online-cracker"
+            title="View source code on GitHub"
+            >Code</a
+          >
         </h3>
       </template>
       <template v-else-if="isTokenValid">
         <h1 class="accent">Valid Token</h1>
         <h3>
           <b>{{ tokenAlgorithm }}</b> algorithm supported.<br />
-          <span v-if="dictionaryLocked"
-            >Dictionary <b>{{ dictionarySelected.name }}</b> selected.</span
-          >
+          <span v-if="dictionaryLocked">
+            Dictionary <b>{{ dictionarySelected.name }}</b> selected.<br />
+          </span>
           <span v-if="method === Method.alphabet">
-            <b>{{ alphabet.length }}</b> symbols selected.<br />
+            <b>{{ alphabetLength }}</b> symbols selected.<br />
             <b
               :class="{
-                warning: alphabetComplexity > 1000000000
+                warning: alphabetComplexity > ALPHABET_WARNING_COMPLEXITY_THRESHOLD
               }"
-              >{{ alphabetComplexity.toLocaleString() }}</b
             >
-            possible combinations.
+              {{ alphabetComplexity.toLocaleString() }}
+            </b>
+            possible combinations.<br />
           </span>
+          <a @click="fullReset">Reset</a>
         </h3>
       </template>
       <template v-else>
@@ -187,7 +219,7 @@ const demo = (x = 0) => {
 
   <main>
     <TransitionGroup>
-      <div class="row" v-if="done" :key="5">
+      <div class="column" v-if="done" :key="5">
         <div v-if="secret" class="container">
           <h1 class="title-small">Secret found!</h1>
           <h2>
@@ -238,7 +270,10 @@ const demo = (x = 0) => {
         <div class="row" v-if="tokenLocked && method === Method.dictionary" :key="3">
           <StepNumber step="3" :active="!dictionaryLocked && !alphabetLocked" />
           <div class="container">
-            <h4>Select a Dictionary</h4>
+            <h4>
+              Select a
+              <a href="https://github.com/danielmiessler/SecLists" target="_blank">Dictionary</a>
+            </h4>
             <ListSelector
               :items="dictionaryList"
               v-model="dictionarySelected"
@@ -246,7 +281,12 @@ const demo = (x = 0) => {
             />
           </div>
           <AnimatedButton
-            @clicked="dictionaryLocked = true"
+            @clicked="
+              () => {
+                dictionaryLocked = true
+                scrollToStartButton()
+              }
+            "
             @clicked-cancel="dictionaryLocked = false"
             content="Confirm"
             :canceled="dictionaryLocked"
@@ -277,6 +317,7 @@ const demo = (x = 0) => {
           <StepNumber step="4" :active="true" />
           <div class="container">
             <AnimatedButton
+              ref="startButtonRef"
               @clicked="onStart"
               @clicked-cancel="onStop"
               content="Start Brute-force"
@@ -315,6 +356,13 @@ main {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
 }
 
 .container {
