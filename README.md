@@ -6,9 +6,11 @@
 
 Brute-force HS256, HS384 or HS512 JWT Token from your browser. Using exclusively 100% client-side JavaScript. No installation needed.
 
+>>> [https://jwt-cracker.online](https://jwt-cracker.online) <<<
+
 https://github.com/user-attachments/assets/61c2abd2-5832-433a-bc92-54411db8860e
 
-Made with [Vue 3](https://vuejs.org) (with TypeScript) using web workers and a futuristic looking UI.
+Made with [Vue 3](https://vuejs.org) (with TypeScript, 0 dependency) using web workers and a futuristic looking UI.
 
 Contributions are welcome!
 
