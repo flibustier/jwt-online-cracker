@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed } from "vue";
 
-const props = defineProps(['firstPercent', 'secondPercent'])
-const maxPercent = computed(() => Math.max(props.firstPercent, props.secondPercent))
+const props = defineProps(["firstPercent", "secondPercent"]);
+const maxPercent = computed(() =>
+  Math.max(props.firstPercent, props.secondPercent),
+);
 </script>
 
 <template>
@@ -18,13 +20,13 @@ const maxPercent = computed(() => Math.max(props.firstPercent, props.secondPerce
 
 <style scoped>
 @property --p1 {
-  syntax: '<percentage>';
+  syntax: "<percentage>";
   inherits: false;
   initial-value: 0%;
 }
 
 @property --p2 {
-  syntax: '<percentage>';
+  syntax: "<percentage>";
   inherits: false;
   initial-value: 0%;
 }
@@ -34,7 +36,11 @@ const maxPercent = computed(() => Math.max(props.firstPercent, props.secondPerce
   height: 195px;
   border-radius: 50%;
 
-  background: radial-gradient(closest-side, var(--color-background) 90%, transparent 90% 100%),
+  background: radial-gradient(
+      closest-side,
+      var(--color-background) 90%,
+      transparent 90% 100%
+    ),
     conic-gradient(
       var(--color-accent) 0 var(--p1),
       var(--color-warning) var(--p1) var(--p2),

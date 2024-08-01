@@ -1,1 +1,1 @@
-export const SUPPORTED_ALGORITHM = ['HS256', 'HS384', 'HS512']
+export const SUPPORTED_ALGORITHM = ["HS256", "HS384", "HS512"];

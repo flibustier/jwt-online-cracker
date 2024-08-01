@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed } from "vue";
 
-const props = defineProps(['modelValue', 'placeholder', 'disabled'])
-defineEmits(['update:modelValue', 'submit'])
+const props = defineProps(["modelValue", "placeholder", "disabled"]);
+defineEmits(["update:modelValue", "submit"]);
 
-const rows = computed(() => (props.modelValue ? 5 : 5))
+const rows = computed(() => (props.modelValue ? 5 : 5));
 </script>
 
 <template>

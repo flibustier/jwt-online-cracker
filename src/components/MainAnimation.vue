@@ -2,9 +2,9 @@
 defineProps({
   step: {
     type: Number,
-    default: 0
-  }
-})
+    default: 0,
+  },
+});
 </script>
 
 <template>
