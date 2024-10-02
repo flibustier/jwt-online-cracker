@@ -139,6 +139,19 @@ const onStop = () => {
   start.value = false;
 };
 
+const activeStep = computed(() => {
+  if (!tokenLocked.value) {
+    return 1;
+  }
+  if (!method.value) {
+    return 2;
+  }
+  if (!dictionaryLocked.value && !alphabetLocked.value) {
+    return 3;
+  }
+  return 4;
+});
+
 const fullReset = () => {
   tokenLocked.value = false;
   token.value = "";
@@ -230,7 +243,7 @@ const scrollToStartButton = () =>
     </div>
   </header>
 
-  <main>
+  <main style="position: relative">
     <TransitionGroup>
       <div class="column" v-if="done" :key="5">
         <div v-if="secret" class="container">
@@ -246,10 +259,11 @@ const scrollToStartButton = () =>
       </div>
       <template v-else>
         <div class="row" :key="1">
-          <StepNumber step="1" :active="!tokenLocked" />
+          <StepNumber step="1" :active="activeStep === 1" />
           <TextInput
             v-model="token"
             placeholder="Paste your full JWT Token here"
+            :class="{ pulsate: !tokenLocked }"
             :disabled="tokenLocked"
             @submit="tokenLocked = isTokenValid"
           />
@@ -262,7 +276,7 @@ const scrollToStartButton = () =>
           />
         </div>
         <div class="row" v-if="tokenLocked" :key="2">
-          <StepNumber step="2" :active="!method" />
+          <StepNumber step="2" :active="activeStep === 2" />
           <div class="container">
             <h4>Select Brute-force method</h4>
             <div class="row">
@@ -283,9 +297,9 @@ const scrollToStartButton = () =>
         <div
           class="row"
           v-if="tokenLocked && method === Method.dictionary"
-          :key="3"
+          :key="3.1"
         >
-          <StepNumber step="3" :active="!dictionaryLocked && !alphabetLocked" />
+          <StepNumber step="3" :active="activeStep === 3" />
           <div class="container">
             <h4>
               Select a
@@ -316,9 +330,9 @@ const scrollToStartButton = () =>
         <div
           class="row"
           v-if="tokenLocked && method === Method.alphabet"
-          :key="3"
+          :key="3.2"
         >
-          <StepNumber step="3" :active="!dictionaryLocked && !alphabetLocked" />
+          <StepNumber step="3" :active="activeStep === 3" />
           <div class="container">
             <h4>Confirm or Modify Alphabet</h4>
             <TextInput
@@ -467,18 +481,44 @@ b {
 .v-leave-active {
   transition: all 0.5s ease;
 }
-.v-enter-from,
-.v-leave-to {
+.v-enter-from {
   opacity: 0;
   transform: translateY(-2rem);
 }
+.v-leave-to {
+  opacity: 0;
+}
 .v-leave-active {
   position: absolute;
+  bottom: 0;
+  width: 100%;
 }
 
 @media (max-width: 1280px) {
   main {
     margin-top: 2rem;
+  }
+}
+
+.pulsate {
+  animation: pulsate 2s ease-in-out infinite alternate;
+}
+
+@keyframes pulsate {
+  0% {
+    box-shadow: 1px 1px 7px hsla(180, 100%, 50%, 0.6);
+    color: hsla(180, 100%, 50%, 0.6);
+    text-shadow: 0 0 2px hsla(180, 100%, 50%, 0.6);
+  }
+  66% {
+    box-shadow: 1px 1px 10px hsla(180, 100%, 50%, 0.7);
+    color: hsla(180, 100%, 50%, 0.7);
+    text-shadow: 0 0 5px hsla(180, 100%, 50%, 0.7);
+  }
+  100% {
+    box-shadow: 1px 1px 15px hsla(180, 100%, 50%, 1);
+    color: hsla(180, 100%, 50%, 1);
+    text-shadow: 0 0 8px hsla(180, 100%, 50%, 1);
   }
 }
 </style>
