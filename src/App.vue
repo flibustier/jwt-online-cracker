@@ -380,7 +380,6 @@ const scrollToStartButton = () =>
 header {
   display: flex;
   justify-content: center;
-  margin-right: 3rem;
 }
 
 main {
