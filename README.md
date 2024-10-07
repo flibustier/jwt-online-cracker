@@ -23,10 +23,10 @@ Contributions are welcome!
 - [x] Bruteforcing with custom character set
 - [x] Bruteforcing with custom length
 - [x] Dictionary attack with a [preset of lists](https://github.com/danielmiessler/SecLists)
-- [ ] Custom dictionary
+- [ ] Custom dictionary ([#1](https://github.com/flibustier/jwt-online-cracker/issues/1))
 - [ ] Timer and other statistics
-- [ ] Bruteforcing using webassembly
-- [ ] Notification when finished
+- [ ] Bruteforcing using webassembly ([#2](https://github.com/flibustier/jwt-online-cracker/issues/2))
+- [ ] Notification when finished ([#3](https://github.com/flibustier/jwt-online-cracker/issues/3))
 
 ## Running locally
 
