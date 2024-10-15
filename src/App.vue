@@ -202,21 +202,22 @@ const scrollToStartButton = () =>
     <div class="title" v-if="!start && !done">
       <template v-if="token.length === 0">
         <h1 class="accent">JWT Online Cracker</h1>
-        <h3>
+        <h2>
           Brute-force <b>HS256</b>, <b>HS384</b> or <b>HS512</b> JWT Token from
           your browser.<br />
           No installation needed.<br />
-          <a @click="demo()">Demo</a>,
+          <a href="#" @click="demo()">Demo</a>,
           <a
             href="https://github.com/flibustier/jwt-online-cracker"
             title="View source code on GitHub"
-            >Code</a
           >
-        </h3>
+            Code
+          </a>
+        </h2>
       </template>
       <template v-else-if="isTokenValid">
         <h1 class="accent">Valid Token</h1>
-        <h3>
+        <h2>
           <b>{{ tokenAlgorithm }}</b> algorithm supported.<br />
           <span v-if="dictionaryLocked">
             Dictionary <b>{{ dictionarySelected.name }}</b> selected.<br />
@@ -234,11 +235,11 @@ const scrollToStartButton = () =>
             possible combinations.<br />
           </span>
           <a @click="fullReset">Reset</a>
-        </h3>
+        </h2>
       </template>
       <template v-else>
         <h1 class="warning">Invalid Token</h1>
-        <h3 v-html="errorOutput"></h3>
+        <h2 v-html="errorOutput"></h2>
       </template>
     </div>
   </header>
@@ -434,7 +435,7 @@ h1 {
   font-size: 4rem;
 }
 
-h3 {
+h2 {
   font-size: 1.2rem;
   line-height: 1.5;
   /*

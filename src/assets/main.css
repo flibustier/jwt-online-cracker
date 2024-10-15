@@ -1,11 +1,13 @@
 @font-face {
   font-family: "Source Code Pro";
   src: url("/fonts/SourceCodePro-VariableFont_wght.ttf") format("truetype");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Axeon";
   src: url("/fonts/Axeon.ttf") format("truetype");
+  font-display: swap;
 }
 
 /* color palette from <https://github.com/vuejs/theme> */
