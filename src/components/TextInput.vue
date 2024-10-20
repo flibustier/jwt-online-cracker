@@ -33,7 +33,29 @@ textarea {
   caret-color: var(--color-accent);
 }
 
+textarea:not(:disabled) {
+  animation: pulsate 2s ease-in-out infinite alternate;
+}
+
 textarea:disabled {
   border: 1px solid hsla(180, 100%, 50%, 0.3);
+}
+
+@keyframes pulsate {
+  0% {
+    box-shadow: 1px 1px 7px hsla(180, 100%, 50%, 0.6);
+    color: hsla(180, 100%, 50%, 0.6);
+    text-shadow: 0 0 2px hsla(180, 100%, 50%, 0.6);
+  }
+  66% {
+    box-shadow: 1px 1px 10px hsla(180, 100%, 50%, 0.7);
+    color: hsla(180, 100%, 50%, 0.7);
+    text-shadow: 0 0 5px hsla(180, 100%, 50%, 0.7);
+  }
+  100% {
+    box-shadow: 1px 1px 15px hsla(180, 100%, 50%, 1);
+    color: hsla(180, 100%, 50%, 1);
+    text-shadow: 0 0 8px hsla(180, 100%, 50%, 1);
+  }
 }
 </style>

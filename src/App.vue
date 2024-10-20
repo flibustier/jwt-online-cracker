@@ -9,9 +9,10 @@ import AnimatedButton from "./components/AnimatedButton.vue";
 import ProgressCircle from "./components/ProgressCircle.vue";
 import RangeSelector from "./components/RangeSelector.vue";
 
+import BruteForce from "./services/bruteforce";
 import { validateJWT, getAlgorithm } from "./services/jwtValidator";
 import { listDictionaries } from "./services/dictionaryFetcher";
-import BruteForce from "./services/bruteforce";
+import { sendSuccess } from "./services/statistics";
 /* import StopWatch from './components/StopWatch.vue' */
 
 enum Method {
@@ -84,8 +85,7 @@ watch([tokenLocked, method, alphabetLocked, dictionaryLocked], () => {
 const onSuccess = (secretFound: string) => {
   done.value = true;
   secret.value = secretFound;
-  // @ts-ignore
-  cabin.event(secretFound + " : " + token.value);
+  sendSuccess({ secret: secretFound, token: token.value });
   onStop();
 };
 
@@ -264,7 +264,6 @@ const scrollToStartButton = () =>
           <TextInput
             v-model="token"
             placeholder="Paste your full JWT Token here"
-            :class="{ pulsate: !tokenLocked }"
             :disabled="tokenLocked"
             @submit="tokenLocked = isTokenValid"
           />
@@ -438,22 +437,6 @@ h1 {
 h2 {
   font-size: 1.2rem;
   line-height: 1.5;
-  /*
-  overflow: hidden;  
-  animation: typing 2s linear;
-   */
-}
-
-/* The typing effect */
-@keyframes typing {
-  from {
-    height: 0;
-    border-color: orange;
-  }
-  to {
-    height: 100%;
-    border-color: transparent;
-  }
 }
 
 h4 {
@@ -497,28 +480,6 @@ b {
 @media (max-width: 1280px) {
   main {
     margin-top: 2rem;
-  }
-}
-
-.pulsate {
-  animation: pulsate 2s ease-in-out infinite alternate;
-}
-
-@keyframes pulsate {
-  0% {
-    box-shadow: 1px 1px 7px hsla(180, 100%, 50%, 0.6);
-    color: hsla(180, 100%, 50%, 0.6);
-    text-shadow: 0 0 2px hsla(180, 100%, 50%, 0.6);
-  }
-  66% {
-    box-shadow: 1px 1px 10px hsla(180, 100%, 50%, 0.7);
-    color: hsla(180, 100%, 50%, 0.7);
-    text-shadow: 0 0 5px hsla(180, 100%, 50%, 0.7);
-  }
-  100% {
-    box-shadow: 1px 1px 15px hsla(180, 100%, 50%, 1);
-    color: hsla(180, 100%, 50%, 1);
-    text-shadow: 0 0 8px hsla(180, 100%, 50%, 1);
   }
 }
 </style>
