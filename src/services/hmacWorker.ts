@@ -31,7 +31,7 @@ const CreateHmacFunction = (hashAlgorithm: string, content: string) => {
         .replace(/\+/g, "-")
         .replace(/\//g, "_");
     } catch (error) {
-      console.log(error);
+      console.warn(error);
 
       return "";
     }
@@ -47,7 +47,7 @@ interface Data {
 
 onmessage = (e) => {
   const { algorithm, token, words, id }: Data = e.data;
-  console.log(`worker ${id} received ${words.length} words`);
+  console.debug(`Worker ${id} received ${words.length} words`);
   const [header, payload, signature] = token.split(".");
   const content = `${header}.${payload}`;
 
@@ -58,7 +58,7 @@ onmessage = (e) => {
       const forgedSignature = await hmac(word);
 
       if (forgedSignature === signature) {
-        console.log("found:", word);
+        console.info("Secret found :", word);
         postMessage({ secretFound: word });
       }
     }),
