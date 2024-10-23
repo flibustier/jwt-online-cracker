@@ -16,6 +16,7 @@ export default class BruteForce {
   private wordsDone = 0;
   private wordsSent = 0;
   private wordsRemaining = 0;
+  private isDone = false;
 
   private initWorkers = (onProgress: Function, onSucceeded: Function) => {
     this.workerPool = new Array<Worker>(
@@ -28,6 +29,7 @@ export default class BruteForce {
 
           if (secretFound) {
             onSucceeded(secretFound);
+            this.cancel();
           }
 
           if (isDone) {
@@ -39,12 +41,16 @@ export default class BruteForce {
   };
 
   private sendSliceToWorker = (workerIndex: number, slice: string[]) => {
-    this.workerPool[workerIndex].postMessage({
-      algorithm: this.algorithm,
-      token: this.token,
-      words: slice,
-      id: workerIndex,
-    });
+    if (!this.isDone) {
+      this.workerPool[workerIndex].postMessage({
+        algorithm: this.algorithm,
+        token: this.token,
+        words: slice,
+        id: workerIndex,
+      });
+    } else {
+      console.debug("stop received : ignoring new messages");
+    }
   };
 
   private dispatchWordsToWorkers = (words: string[]) => {
@@ -102,18 +108,8 @@ export default class BruteForce {
       Math.pow(alphabet.length, maxLength) -
       Math.pow(alphabet.length, startLength);
 
-    console.log(`starting brute-force of ${this.wordsRemaining} combinations`);
-    /*
-    const iterator = makeAlphabetCombinationsIterator(alphabet, 1, MAX_LENGTH)
-    let iteration = iterator.next()
-    while (!iteration.done) {
-      await this.sendSliceToWorker(0, iteration.value)
-      // send progress
-      console.log(iteration.length)
-      iteration = iterator.next()
-    }
-    console.log('done')
-    */
+    console.info(`Starting brute-force of ${this.wordsRemaining} combinations`);
+
     const combinator = new CombinatorWorker();
     combinator.onmessage = (e) => this.dispatchWordsToWorkers(e.data);
     combinator.postMessage({ alphabet, startLength, maxLength });
@@ -128,7 +124,7 @@ export default class BruteForce {
     this.wordsRemaining = 0;
     this.dictionarySize = dictionarySize;
 
-    console.log(
+    console.debug(
       `starting download of dictionary ${dictionaryURL} (${dictionarySize} bytes)`,
     );
 
@@ -154,5 +150,8 @@ export default class BruteForce {
     }
   };
 
-  public cancel = () => this.workerPool.forEach((worker) => worker.terminate());
+  public cancel() {
+    this.isDone = true;
+    this.workerPool.forEach((worker) => worker.terminate());
+  }
 }
