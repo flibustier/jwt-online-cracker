@@ -62,5 +62,7 @@ onmessage = (e) => {
         postMessage({ secretFound: word });
       }
     }),
-  ).then(() => postMessage({ isDone: true, batchSize: words.length }));
+  ).then(() =>
+    postMessage({ isDone: true, batchSize: words.length, sample: words[0] }),
+  );
 };
