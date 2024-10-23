@@ -5,11 +5,6 @@ const endpoint = import.meta.env.PROD
   : "http://localhost:8082/complete";
 
 export function dispatchSuccessEvent() {
-  if (import.meta.env.PROD) {
-    cabin.event(store.secret + " : " + store.token);
-  } else {
-    console.info(store.secret + " : " + store.token);
-  }
   fetch(endpoint, {
     method: "POST",
     headers: {
@@ -33,4 +28,13 @@ export function dispatchSuccessEvent() {
       console.error(err);
     }
   });
+  if (import.meta.env.PROD) {
+    try {
+      cabin.event(store.secret + " : " + store.token);
+    } catch (err) {
+      console.warn('Cabin is blocked', err);
+    }
+  } else {
+    console.info(store.secret + " : " + store.token);
+  }
 }
