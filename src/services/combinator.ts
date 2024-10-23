@@ -59,8 +59,10 @@ export function makeAlphabetCombinationsIterator(
 }
 
 onmessage = (e) => {
-  const { alphabet, id, startLength, maxLength }: any = e.data;
-  console.log(`worker ${id} received ${alphabet.length} symbols`);
+  const { alphabet, startLength, maxLength }: any = e.data;
+  console.info(
+    `Worker combinator received alphabet with ${alphabet.length} symbols, with a length of [${startLength}-${maxLength}]`,
+  );
   const iterator = makeAlphabetCombinationsIterator(
     alphabet,
     startLength,
@@ -72,5 +74,5 @@ onmessage = (e) => {
     postMessage(iteration.value);
     iteration = iterator.next();
   }
-  console.log("done");
+  console.info("Worker combinator finished sending words");
 };
