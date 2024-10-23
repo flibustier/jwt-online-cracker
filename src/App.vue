@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted } from "vue";
 
 import TextInput from "./components/TextInput.vue";
 import StepNumber from "./components/StepNumber.vue";
@@ -8,53 +8,34 @@ import MainAnimation from "./components/MainAnimation.vue";
 import AnimatedButton from "./components/AnimatedButton.vue";
 import ProgressCircle from "./components/ProgressCircle.vue";
 import RangeSelector from "./components/RangeSelector.vue";
+/* import StopWatch from './components/StopWatch.vue' */
 
 import BruteForce from "./services/bruteforce";
 import { validateJWT, getAlgorithm } from "./services/jwtValidator";
 import { listDictionaries } from "./services/dictionaryFetcher";
-import { sendSuccess } from "./services/statistics";
-/* import StopWatch from './components/StopWatch.vue' */
+import { dispatchSuccessEvent } from "./services/statistics";
+import { store, Method, hasStarted } from "./services/store";
 
-enum Method {
-  dictionary = "dictionary",
-  alphabet = "alphabet",
-}
-
-const DEFAULT_ALPHABET =
-  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 const DEFAULT_DICTIONARY = "scraped-JWT-secrets.txt";
-const DEFAULT_ALPHABET_MAX_LENGTH = 6;
 const ALPHABET_WARNING_COMPLEXITY_THRESHOLD = 10_000_000;
 
-const token = ref("");
-const tokenLocked = ref(false);
-const method = ref();
-const alphabet = ref(DEFAULT_ALPHABET);
-const alphabetLocked = ref(false);
-const alphabetMaxLength = ref(DEFAULT_ALPHABET_MAX_LENGTH);
 const dictionaryList = ref([] as any[]);
-const dictionarySelected = ref();
-const dictionaryLocked = ref(false);
 const startButtonRef = ref();
-const start = ref();
-const done = ref(false);
-const downloadProgress = ref(0);
-const progress = ref(0);
-// const attempts = ref(0)
-const secret = ref();
 
-const isTokenValid = computed(() => validateJWT(token.value)[0]);
-const errorOutput = computed(() => validateJWT(token.value)[1]);
-const tokenAlgorithm = computed(() => getAlgorithm(token.value));
-const alphabetLength = computed(() => new Set(alphabet.value.split("")).size);
-const alphabetComplexity = computed(() =>
-  Math.pow(alphabetLength.value, alphabetMaxLength.value),
+const isTokenValid = computed(() => validateJWT(store.token)[0]);
+const errorOutput = computed(() => validateJWT(store.token)[1]);
+const tokenAlgorithm = computed(() => getAlgorithm(store.token));
+const alphabetLength = computed(
+  () => new Set(store.alphabetSelected.split("")).size,
 );
-const step = computed(() => {
-  if (token.value.length === 0 || secret.value) {
+const alphabetComplexity = computed(() =>
+  Math.pow(alphabetLength.value, store.alphabetMaxLength),
+);
+const logoAnimationStep = computed(() => {
+  if (store.token.length === 0 || store.secret) {
     return 0;
   }
-  if (start.value) {
+  if (hasStarted.value) {
     return 2;
   }
   return 1;
@@ -62,115 +43,87 @@ const step = computed(() => {
 
 onMounted(async () => {
   dictionaryList.value = await listDictionaries();
-  dictionarySelected.value = dictionaryList.value.find(
+  store.dictionarySelected = dictionaryList.value.find(
     (list) => list.name === DEFAULT_DICTIONARY,
   );
 });
 
+/*
 watch([tokenLocked, method, alphabetLocked, dictionaryLocked], () => {
   start.value = false;
-  if (!tokenLocked.value) {
-    method.value = undefined;
+  if (!store.isTokenLocked) {
+    store.method = undefined;
   }
-  if (method.value === Method.dictionary || !tokenLocked.value) {
-    alphabetLocked.value = false;
+  if (store.method === Method.dictionary || !store.isTokenLocked) {
+    store.isAlphabetLocked = false;
   }
-  if (method.value === Method.alphabet || !tokenLocked.value) {
-    dictionaryLocked.value = false;
+  if (store.method === Method.alphabet || !store.isTokenLocked) {
+    store.isDictionaryLocked = false;
   }
   downloadProgress.value = 0;
   progress.value = 0;
 });
-
-const onSuccess = (secretFound: string) => {
-  done.value = true;
-  secret.value = secretFound;
-  sendSuccess({ secret: secretFound, token: token.value });
-  onStop();
-};
-
-const updateDownloadProgress = (downloadPercent: number) =>
-  (downloadProgress.value = downloadPercent);
-const updateGlobalProgress = (progressPercent: number) => {
-  progress.value = progressPercent;
-  if (progressPercent === 100) {
-    done.value = true;
-    onStop();
-  }
-};
+*/
 
 let bruteForceService: BruteForce;
 
 const onStart = async () => {
-  start.value = new Date();
-  downloadProgress.value = 0;
-  progress.value = 0;
+  store.start();
 
   bruteForceService = new BruteForce(
     tokenAlgorithm.value,
-    token.value,
-    updateGlobalProgress,
-    onSuccess,
+    store.token,
+    (progress: number) => store.updateGlobalProgress(progress),
+    (secret: string) => {
+      store.onSuccess(secret);
+      dispatchSuccessEvent();
+    },
   );
 
-  if (method.value === Method.dictionary) {
+  if (store.method === Method.dictionary) {
     bruteForceService.startDictionary(
-      dictionarySelected.value.dictionaryURL,
-      dictionarySelected.value.rawSize,
-      updateDownloadProgress,
+      store.dictionarySelected?.dictionaryURL || "",
+      store.dictionarySelected?.rawSize || 0,
+      (percent: number) => store.updateDownloadProgress(percent),
     );
-  } else if (method.value === Method.alphabet) {
+  } else if (store.method === Method.alphabet) {
     bruteForceService.startAlphabet(
-      alphabet.value,
+      store.alphabetSelected,
       undefined,
-      alphabetMaxLength.value,
+      store.alphabetMaxLength,
     );
-    updateDownloadProgress(100);
+    store.updateDownloadProgress(100);
   }
 };
 
 const onStop = () => {
   bruteForceService.cancel();
+  store.end();
 
-  const timeDiff = (new Date() as any) - start.value;
-  var seconds = Math.round(timeDiff / 1000);
-  console.log(seconds + " seconds");
-
-  start.value = false;
+  const seconds = store.timeElapsed();
+  console.debug(seconds + " seconds elapsed");
 };
 
 const activeStep = computed(() => {
-  if (!tokenLocked.value) {
+  if (!store.isTokenLocked) {
     return 1;
   }
-  if (!method.value) {
+  if (!store.method) {
     return 2;
   }
-  if (!dictionaryLocked.value && !alphabetLocked.value) {
+  if (!store.isDictionaryLocked && !store.isAlphabetLocked) {
     return 3;
   }
   return 4;
 });
 
-const fullReset = () => {
-  tokenLocked.value = false;
-  token.value = "";
-};
-
-const reset = () => {
-  secret.value = "";
-  done.value = false;
-};
-
-const demo = (x = 0) => {
-  token.value =
-    x === 0
-      ? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBEb2UifQ.xuEv8qrfXu424LZk8bVgr9MQJUIrp1rHcPyZw_KSsds"
-      : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBEb2UifQ.K7Vl1zizbqZsrKQCpvfs2yHJ8wg6vJufLYHbYHaiWPo";
-  tokenLocked.value = true;
-  setTimeout(() => (method.value = Method.dictionary), 750);
+const demo = () => {
+  store.token =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBEb2UifQ.xuEv8qrfXu424LZk8bVgr9MQJUIrp1rHcPyZw_KSsds";
+  store.isTokenLocked = true;
+  setTimeout(() => store.setMethod(Method.dictionary), 750);
   setTimeout(() => {
-    dictionaryLocked.value = true;
+    store.isDictionaryLocked = true;
     //scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
     scrollToStartButton();
   }, 1500);
@@ -190,17 +143,17 @@ const scrollToStartButton = () =>
 <template>
   <header>
     <div class="animation">
-      <MainAnimation :step="step" />
+      <MainAnimation :step="logoAnimationStep" />
       <ProgressCircle
-        v-if="start || secret"
-        :first-percent="downloadProgress"
-        :second-percent="progress"
+        v-if="hasStarted || store.secret"
+        :first-percent="store.downloadPercent"
+        :second-percent="store.progressPercent"
       />
     </div>
     <!--StopWatch :start="!!start" /-->
 
-    <div class="title" v-if="!start && !done">
-      <template v-if="token.length === 0">
+    <div class="title" v-if="!hasStarted && !store.isDone">
+      <template v-if="store.token.length === 0">
         <h1 class="accent">JWT Online Cracker</h1>
         <h2>
           Brute-force <b>HS256</b>, <b>HS384</b> or <b>HS512</b> JWT Token from
@@ -219,10 +172,10 @@ const scrollToStartButton = () =>
         <h1 class="accent">Valid Token</h1>
         <h2>
           <b>{{ tokenAlgorithm }}</b> algorithm supported.<br />
-          <span v-if="dictionaryLocked">
-            Dictionary <b>{{ dictionarySelected.name }}</b> selected.<br />
+          <span v-if="store.isDictionaryLocked">
+            <b>{{ store.dictionarySelected?.name }}</b> selected.<br />
           </span>
-          <span v-if="method === Method.alphabet">
+          <span v-if="store.method === Method.alphabet">
             <b>{{ alphabetLength }}</b> symbols selected.<br />
             <b
               :class="{
@@ -234,7 +187,8 @@ const scrollToStartButton = () =>
             </b>
             possible combinations.<br />
           </span>
-          <a @click="fullReset">Reset</a>
+          <br />
+          <a @click="store.hardReset()">Reset</a>
         </h2>
       </template>
       <template v-else>
@@ -246,49 +200,49 @@ const scrollToStartButton = () =>
 
   <main style="position: relative">
     <TransitionGroup>
-      <div class="column" v-if="done" :key="5">
-        <div v-if="secret" class="container">
+      <div class="column" v-if="store.isDone" :key="5">
+        <div v-if="store.secret" class="container">
           <h1 class="title-small">Secret found!</h1>
           <h2>
-            <b>{{ secret }}</b>
+            <b>{{ store.secret }}</b>
           </h2>
         </div>
         <div v-else class="container">
           <h1 class="warning title-small">Secret not found…</h1>
         </div>
-        <AnimatedButton @clicked="reset" content="Restart" />
+        <AnimatedButton @clicked="store.reset()" content="Restart" />
       </div>
       <template v-else>
         <div class="row" :key="1">
           <StepNumber step="1" :active="activeStep === 1" />
           <TextInput
-            v-model="token"
+            v-model="store.token"
             placeholder="Paste your full JWT Token here"
-            :disabled="tokenLocked"
-            @submit="tokenLocked = isTokenValid"
+            :disabled="store.isTokenLocked"
+            @submit="store.isTokenLocked = isTokenValid"
           />
           <AnimatedButton
-            @clicked="tokenLocked = isTokenValid"
-            @clicked-cancel="tokenLocked = false"
+            @clicked="store.isTokenLocked = isTokenValid"
+            @clicked-cancel="store.isTokenLocked = false"
             content="Confirm"
             :disabled="!isTokenValid"
-            :canceled="tokenLocked"
+            :canceled="store.isTokenLocked"
           />
         </div>
-        <div class="row" v-if="tokenLocked" :key="2">
+        <div class="row" v-if="store.isTokenLocked" :key="2">
           <StepNumber step="2" :active="activeStep === 2" />
           <div class="container">
             <h4>Select Brute-force method</h4>
             <div class="row">
               <AnimatedButton
                 content="Dictionary (faster)"
-                @clicked="method = Method.dictionary"
-                :is-selected="method === Method.dictionary"
+                @clicked="store.setMethod(Method.dictionary)"
+                :is-selected="store.method === Method.dictionary"
               />
               <AnimatedButton
                 content="Alphabet"
-                @clicked="method = Method.alphabet"
-                :is-selected="method === Method.alphabet"
+                @clicked="store.setMethod(Method.alphabet)"
+                :is-selected="store.method === Method.alphabet"
               />
             </div>
           </div>
@@ -296,7 +250,7 @@ const scrollToStartButton = () =>
         </div>
         <div
           class="row"
-          v-if="tokenLocked && method === Method.dictionary"
+          v-if="store.isTokenLocked && store.method === Method.dictionary"
           :key="3.1"
         >
           <StepNumber step="3" :active="activeStep === 3" />
@@ -311,53 +265,54 @@ const scrollToStartButton = () =>
             </h4>
             <ListSelector
               :items="dictionaryList"
-              v-model="dictionarySelected"
-              :disabled="dictionaryLocked"
+              v-model="store.dictionarySelected"
+              :disabled="hasStarted"
             />
           </div>
           <AnimatedButton
             @clicked="
               () => {
-                dictionaryLocked = true;
+                store.isDictionaryLocked = true;
                 scrollToStartButton();
               }
             "
-            @clicked-cancel="dictionaryLocked = false"
+            @clicked-cancel="store.isDictionaryLocked = false"
             content="Confirm"
-            :canceled="dictionaryLocked"
+            :canceled="store.isDictionaryLocked"
           />
         </div>
         <div
           class="row"
-          v-if="tokenLocked && method === Method.alphabet"
+          v-if="store.isTokenLocked && store.method === Method.alphabet"
           :key="3.2"
         >
           <StepNumber step="3" :active="activeStep === 3" />
           <div class="container">
             <h4>Confirm or Modify Alphabet</h4>
             <TextInput
-              v-model="alphabet"
-              :disabled="alphabetLocked"
-              @submit="alphabetLocked = true"
+              v-model="store.alphabetSelected"
+              :disabled="store.isAlphabetLocked"
+              @submit="store.isAlphabetLocked = true"
             />
             <RangeSelector
-              v-model="alphabetMaxLength"
+              v-model="store.alphabetMaxLength"
               :min="1"
               max="12"
-              :disabled="alphabetLocked"
+              :disabled="store.isAlphabetLocked"
             >
-              MAXIMUM LENGTH: <b class="accent">{{ alphabetMaxLength }}</b>
+              MAXIMUM LENGTH:
+              <b class="accent">{{ store.alphabetMaxLength }}</b>
             </RangeSelector>
           </div>
           <AnimatedButton
             content="Confirm"
-            @clicked="alphabetLocked = true"
-            @clicked-cancel="alphabetLocked = false"
-            :canceled="alphabetLocked"
+            @clicked="store.isAlphabetLocked = true"
+            @clicked-cancel="store.isAlphabetLocked = false"
+            :canceled="store.isAlphabetLocked"
           />
         </div>
 
-        <div class="row" v-if="dictionaryLocked || alphabetLocked" :key="4">
+        <div class="row" v-if="activeStep === 4" :key="4">
           <StepNumber step="4" :active="true" />
           <div class="container">
             <AnimatedButton
@@ -365,7 +320,7 @@ const scrollToStartButton = () =>
               @clicked="onStart"
               @clicked-cancel="onStop"
               content="Start Brute-force"
-              :canceled="start"
+              :canceled="hasStarted"
               :pulsate="true"
             />
           </div>
