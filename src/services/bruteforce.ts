@@ -8,6 +8,7 @@ const WORKER_PER_THREAD = 1;
 
 export default class BruteForce {
   private workerPool: Worker[] = [];
+  private combinatorWorker: Worker = new CombinatorWorker();
 
   private algorithm: string = "";
   private token: String = "";
@@ -25,7 +26,7 @@ export default class BruteForce {
     this.workerPool.fill(new Worker()).forEach(
       (worker) =>
         (worker.onmessage = (e) => {
-          const { isDone, batchSize, secretFound } = e.data;
+          const { isDone, batchSize, secretFound, sample } = e.data;
 
           if (secretFound) {
             onSucceeded(secretFound);
@@ -34,7 +35,7 @@ export default class BruteForce {
 
           if (isDone) {
             this.wordsDone = batchSize + this.wordsDone;
-            onProgress(this.globalProgress);
+            onProgress(this.globalProgress, sample);
           }
         }),
     );
@@ -110,9 +111,8 @@ export default class BruteForce {
 
     console.info(`Starting brute-force of ${this.wordsRemaining} combinations`);
 
-    const combinator = new CombinatorWorker();
-    combinator.onmessage = (e) => this.dispatchWordsToWorkers(e.data);
-    combinator.postMessage({ alphabet, startLength, maxLength });
+    this.combinatorWorker.onmessage = (e) => this.dispatchWordsToWorkers(e.data);
+    this.combinatorWorker.postMessage({ alphabet, startLength, maxLength });
   };
 
   public startDictionary = async (
@@ -153,5 +153,6 @@ export default class BruteForce {
   public cancel() {
     this.isDone = true;
     this.workerPool.forEach((worker) => worker.terminate());
+    this.combinatorWorker?.terminate();
   }
 }

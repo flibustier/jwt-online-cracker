@@ -73,7 +73,7 @@ const onStart = async () => {
   bruteForceService = new BruteForce(
     tokenAlgorithm.value,
     store.token,
-    (progress: number) => store.updateGlobalProgress(progress),
+    store.updateGlobalProgress.bind(store),
     (secret: string) => {
       store.onSuccess(secret);
       dispatchSuccessEvent();
@@ -84,7 +84,7 @@ const onStart = async () => {
     bruteForceService.startDictionary(
       store.dictionarySelected?.dictionaryURL || "",
       store.dictionarySelected?.rawSize || 0,
-      (percent: number) => store.updateDownloadProgress(percent),
+      store.updateDownloadProgress.bind(store),
     );
   } else if (store.method === Method.alphabet) {
     bruteForceService.startAlphabet(
@@ -102,6 +102,8 @@ const onStop = () => {
 
   const seconds = store.timeElapsed();
   console.debug(seconds + " seconds elapsed");
+
+  store.reset();
 };
 
 const activeStep = computed(() => {
@@ -138,6 +140,14 @@ const scrollToStartButton = () =>
       });
     }
   }, 1000);
+
+const loadingDots = ref(".");
+setInterval(
+  () =>
+    (loadingDots.value =
+      loadingDots.value.length < 3 ? (loadingDots.value += ".") : "."),
+  300,
+);
 </script>
 
 <template>
@@ -211,6 +221,22 @@ const scrollToStartButton = () =>
           <h1 class="warning title-small">Secret not found…</h1>
         </div>
         <AnimatedButton @clicked="store.reset()" content="Restart" />
+      </div>
+      <div class="column" v-else-if="hasStarted" :key="6">
+        <div class="container">
+          <h1 class="title-small" style="width: 19rem">
+            Cracking{{ loadingDots }}
+          </h1>
+          <h2>
+            <b>{{ store.lastWord }}</b>
+          </h2>
+        </div>
+        <AnimatedButton
+          ref="startButtonRef"
+          @clicked-cancel="onStop"
+          :canceled="true"
+          :pulsate="true"
+        />
       </div>
       <template v-else>
         <div class="row" :key="1">
