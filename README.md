@@ -7,7 +7,7 @@
 Brute-force HS256, HS384 or HS512 JWT Token from your browser. Using exclusively 100% client-side JavaScript. No installation needed.
 
 <div align=center>
-<a href="https://jwt-cracker.online">https://jwt-cracker.online</a>
+<a href="https://flibustier.github.io/jwt-online-cracker">jwt-online-cracker</a>
 </div>
 
 Demo :
