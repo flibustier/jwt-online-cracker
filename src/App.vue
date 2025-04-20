@@ -1,52 +1,46 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted } from 'vue'
 
-import TextInput from "./components/TextInput.vue";
-import StepNumber from "./components/StepNumber.vue";
-import ListSelector from "./components/ListSelector.vue";
-import MainAnimation from "./components/MainAnimation.vue";
-import AnimatedButton from "./components/AnimatedButton.vue";
-import ProgressCircle from "./components/ProgressCircle.vue";
-import RangeSelector from "./components/RangeSelector.vue";
+import TextInput from './components/TextInput.vue'
+import StepNumber from './components/StepNumber.vue'
+import ListSelector from './components/ListSelector.vue'
+import MainAnimation from './components/MainAnimation.vue'
+import AnimatedButton from './components/AnimatedButton.vue'
+import ProgressCircle from './components/ProgressCircle.vue'
+import RangeSelector from './components/RangeSelector.vue'
 /* import StopWatch from './components/StopWatch.vue' */
 
-import BruteForce from "./services/bruteforce";
-import { validateJWT, getAlgorithm } from "./services/jwtValidator";
-import { listDictionaries } from "./services/dictionaryFetcher";
-import { dispatchSuccessEvent } from "./services/statistics";
-import { store, Method, hasStarted } from "./services/store";
+import BruteForce from './services/bruteforce'
+import { validateJWT, getAlgorithm } from './services/jwtValidator'
+import { listDictionaries } from './services/dictionaryFetcher'
+import { dispatchSuccessEvent } from './services/statistics'
+import { store, Method, hasStarted } from './services/store'
 
-const DEFAULT_DICTIONARY = "scraped-JWT-secrets.txt";
-const ALPHABET_WARNING_COMPLEXITY_THRESHOLD = 10_000_000;
+const DEFAULT_DICTIONARY = 'scraped-JWT-secrets.txt'
+const ALPHABET_WARNING_COMPLEXITY_THRESHOLD = 10_000_000
 
-const dictionaryList = ref([] as any[]);
-const startButtonRef = ref();
+const dictionaryList = ref([] as any[])
+const startButtonRef = ref()
 
-const isTokenValid = computed(() => validateJWT(store.token)[0]);
-const errorOutput = computed(() => validateJWT(store.token)[1]);
-const tokenAlgorithm = computed(() => getAlgorithm(store.token));
-const alphabetLength = computed(
-  () => new Set(store.alphabetSelected.split("")).size,
-);
-const alphabetComplexity = computed(() =>
-  Math.pow(alphabetLength.value, store.alphabetMaxLength),
-);
+const isTokenValid = computed(() => validateJWT(store.token)[0])
+const errorOutput = computed(() => validateJWT(store.token)[1])
+const tokenAlgorithm = computed(() => getAlgorithm(store.token))
+const alphabetLength = computed(() => new Set(store.alphabetSelected.split('')).size)
+const alphabetComplexity = computed(() => Math.pow(alphabetLength.value, store.alphabetMaxLength))
 const logoAnimationStep = computed(() => {
   if (store.token.length === 0 || store.secret) {
-    return 0;
+    return 0
   }
   if (hasStarted.value) {
-    return 2;
+    return 2
   }
-  return 1;
-});
+  return 1
+})
 
 onMounted(async () => {
-  dictionaryList.value = await listDictionaries();
-  store.dictionarySelected = dictionaryList.value.find(
-    (list) => list.name === DEFAULT_DICTIONARY,
-  );
-});
+  dictionaryList.value = await listDictionaries()
+  store.dictionarySelected = dictionaryList.value.find((list) => list.name === DEFAULT_DICTIONARY)
+})
 
 /*
 watch([tokenLocked, method, alphabetLocked, dictionaryLocked], () => {
@@ -65,89 +59,83 @@ watch([tokenLocked, method, alphabetLocked, dictionaryLocked], () => {
 });
 */
 
-let bruteForceService: BruteForce;
+let bruteForceService: BruteForce
 
 const onStart = async () => {
-  store.start();
+  store.start()
 
   bruteForceService = new BruteForce(
     tokenAlgorithm.value,
     store.token,
     store.updateGlobalProgress.bind(store),
     (secret: string) => {
-      store.onSuccess(secret);
-      dispatchSuccessEvent();
-    },
-  );
+      store.onSuccess(secret)
+      dispatchSuccessEvent()
+    }
+  )
 
   if (store.method === Method.dictionary) {
     bruteForceService.startDictionary(
-      store.dictionarySelected?.dictionaryURL || "",
+      store.dictionarySelected?.dictionaryURL || '',
       store.dictionarySelected?.rawSize || 0,
-      store.updateDownloadProgress.bind(store),
-    );
+      store.updateDownloadProgress.bind(store)
+    )
   } else if (store.method === Method.alphabet) {
-    bruteForceService.startAlphabet(
-      store.alphabetSelected,
-      undefined,
-      store.alphabetMaxLength,
-    );
-    store.updateDownloadProgress(100);
+    bruteForceService.startAlphabet(store.alphabetSelected, undefined, store.alphabetMaxLength)
+    store.updateDownloadProgress(100)
   }
-};
+}
 
 const onStop = () => {
-  bruteForceService.cancel();
-  store.end();
+  bruteForceService.cancel()
+  store.end()
 
-  const seconds = store.timeElapsed();
-  console.debug(seconds + " seconds elapsed");
+  const seconds = store.timeElapsed()
+  console.debug(seconds + ' seconds elapsed')
 
-  store.reset();
-};
+  store.reset()
+}
 
 const activeStep = computed(() => {
   if (!store.isTokenLocked) {
-    return 1;
+    return 1
   }
   if (!store.method) {
-    return 2;
+    return 2
   }
   if (!store.isDictionaryLocked && !store.isAlphabetLocked) {
-    return 3;
+    return 3
   }
-  return 4;
-});
+  return 4
+})
 
 const demo = () => {
   store.token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBEb2UifQ.xuEv8qrfXu424LZk8bVgr9MQJUIrp1rHcPyZw_KSsds";
-  store.isTokenLocked = true;
-  setTimeout(() => store.setMethod(Method.dictionary), 750);
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9obiBEb2UifQ.xuEv8qrfXu424LZk8bVgr9MQJUIrp1rHcPyZw_KSsds'
+  store.isTokenLocked = true
+  setTimeout(() => store.setMethod(Method.dictionary), 750)
   setTimeout(() => {
-    store.isDictionaryLocked = true;
+    store.isDictionaryLocked = true
     //scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-    scrollToStartButton();
-  }, 1500);
-};
+    scrollToStartButton()
+  }, 1500)
+}
 
 const scrollToStartButton = () =>
   setTimeout(() => {
     if (startButtonRef.value) {
       startButtonRef.value.$el.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+        behavior: 'smooth',
+        block: 'center'
+      })
     }
-  }, 1000);
+  }, 1000)
 
-const loadingDots = ref(".");
+const loadingDots = ref('.')
 setInterval(
-  () =>
-    (loadingDots.value =
-      loadingDots.value.length < 3 ? (loadingDots.value += ".") : "."),
-  300,
-);
+  () => (loadingDots.value = loadingDots.value.length < 3 ? (loadingDots.value += '.') : '.'),
+  300
+)
 </script>
 
 <template>
@@ -166,8 +154,7 @@ setInterval(
       <template v-if="store.token.length === 0">
         <h1 class="accent">JWT Online Cracker</h1>
         <h2>
-          Brute-force <b>HS256</b>, <b>HS384</b> or <b>HS512</b> JWT Token from
-          your browser.<br />
+          Brute-force <b>HS256</b>, <b>HS384</b> or <b>HS512</b> JWT Token from your browser.<br />
           No installation needed.<br />
           <a href="#" @click="demo()">Demo</a>,
           <a
@@ -189,8 +176,7 @@ setInterval(
             <b>{{ alphabetLength }}</b> symbols selected.<br />
             <b
               :class="{
-                warning:
-                  alphabetComplexity > ALPHABET_WARNING_COMPLEXITY_THRESHOLD,
+                warning: alphabetComplexity > ALPHABET_WARNING_COMPLEXITY_THRESHOLD
               }"
             >
               {{ alphabetComplexity.toLocaleString() }}
@@ -224,9 +210,7 @@ setInterval(
       </div>
       <div class="column" v-else-if="hasStarted" :key="6">
         <div class="container">
-          <h1 class="title-small" style="width: 19rem">
-            Cracking{{ loadingDots }}
-          </h1>
+          <h1 class="title-small" style="width: 19rem">Cracking{{ loadingDots }}</h1>
           <h2>
             <b>{{ store.lastWord }}</b>
           </h2>
@@ -283,11 +267,7 @@ setInterval(
           <div class="container">
             <h4>
               Select a
-              <a
-                href="https://github.com/danielmiessler/SecLists"
-                target="_blank"
-                >Dictionary</a
-              >
+              <a href="https://github.com/danielmiessler/SecLists" target="_blank">Dictionary</a>
             </h4>
             <ListSelector
               :items="dictionaryList"
@@ -298,8 +278,8 @@ setInterval(
           <AnimatedButton
             @clicked="
               () => {
-                store.isDictionaryLocked = true;
-                scrollToStartButton();
+                store.isDictionaryLocked = true
+                scrollToStartButton()
               }
             "
             @clicked-cancel="store.isDictionaryLocked = false"
@@ -307,11 +287,7 @@ setInterval(
             :canceled="store.isDictionaryLocked"
           />
         </div>
-        <div
-          class="row"
-          v-if="store.isTokenLocked && store.method === Method.alphabet"
-          :key="3.2"
-        >
+        <div class="row" v-if="store.isTokenLocked && store.method === Method.alphabet" :key="3.2">
           <StepNumber step="3" :active="activeStep === 3" />
           <div class="container">
             <h4>Confirm or Modify Alphabet</h4>

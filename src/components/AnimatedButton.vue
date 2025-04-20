@@ -1,6 +1,6 @@
 <script setup lang="ts">
-defineProps(["content", "disabled", "canceled", "isSelected", "pulsate"]);
-defineEmits(["clicked", "clicked-cancel"]);
+defineProps(['content', 'disabled', 'canceled', 'isSelected', 'pulsate'])
+defineEmits(['clicked', 'clicked-cancel'])
 </script>
 
 <template>
@@ -11,7 +11,7 @@ defineEmits(["clicked", "clicked-cancel"]);
     :disabled="disabled"
   >
     <span class="kave-line" :class="{ canceled }"></span>
-    {{ canceled ? "cancel" : content }}
+    {{ canceled ? 'cancel' : content }}
   </button>
 </template>
 
@@ -39,7 +39,7 @@ button {
   color: hsla(33, 100%, 50%, 0.5);
 }
 .kave-btn:before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 10%;
@@ -50,7 +50,7 @@ button {
   transition: all 0.25s ease;
 }
 .kave-btn:after {
-  content: "";
+  content: '';
   position: absolute;
   bottom: 0;
   right: 10%;
@@ -96,7 +96,7 @@ button {
   top: 0;
 }
 .kave-line:before {
-  content: "";
+  content: '';
   position: absolute;
   bottom: 30%;
   right: 0;
@@ -107,7 +107,7 @@ button {
   transition: all 0.25s ease;
 }
 .kave-line:after {
-  content: "";
+  content: '';
   position: absolute;
   top: 30%;
   left: 0;

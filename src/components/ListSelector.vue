@@ -1,71 +1,71 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
-const emit = defineEmits(["update:modelValue"]);
-const props = defineProps(["items", "modelValue", "disabled"]);
+const emit = defineEmits(['update:modelValue'])
+const props = defineProps(['items', 'modelValue', 'disabled'])
 
-const suggestionsRefs = ref([] as (HTMLElement | null)[]);
+const suggestionsRefs = ref([] as (HTMLElement | null)[])
 
 const selectedIndex = computed(() =>
-  props.items.findIndex((item: any) => item.name === props.modelValue?.name),
-);
-const selectedRef = computed(() => suggestionsRefs.value[selectedIndex.value]);
+  props.items.findIndex((item: any) => item.name === props.modelValue?.name)
+)
+const selectedRef = computed(() => suggestionsRefs.value[selectedIndex.value])
 
 const scrollToSelected = () => {
   selectedRef.value?.scrollIntoView({
-    behavior: "smooth",
-    block: "center",
-  });
-};
+    behavior: 'smooth',
+    block: 'center'
+  })
+}
 
 const handleKeyup = (event: KeyboardEvent) => {
   if (props.disabled) {
-    return;
+    return
   }
 
-  if (event.code === "ArrowUp") {
-    navigate("up");
-  } else if (event.code === "ArrowDown") {
-    navigate("down");
+  if (event.code === 'ArrowUp') {
+    navigate('up')
+  } else if (event.code === 'ArrowDown') {
+    navigate('down')
   }
-};
+}
 
-const navigate = (direction: "up" | "down") => {
+const navigate = (direction: 'up' | 'down') => {
   if (props.items.length === 0) {
-    return;
+    return
   }
 
-  let newIndex;
+  let newIndex
   if (props.modelValue == null) {
-    newIndex = 0;
-  } else if (direction === "up") {
+    newIndex = 0
+  } else if (direction === 'up') {
     if (selectedIndex.value === 0) {
-      newIndex = props.items.length - 1;
+      newIndex = props.items.length - 1
     } else {
-      newIndex = selectedIndex.value - 1;
+      newIndex = selectedIndex.value - 1
     }
   } else {
-    newIndex = (selectedIndex.value + 1) % props.items.length;
+    newIndex = (selectedIndex.value + 1) % props.items.length
   }
 
-  emit("update:modelValue", props.items[newIndex]);
-};
+  emit('update:modelValue', props.items[newIndex])
+}
 
 const updateSelected = (list: any) => {
   if (!props.disabled) {
-    emit("update:modelValue", list);
+    emit('update:modelValue', list)
   }
-};
+}
 
-watch(() => props.modelValue, scrollToSelected);
+watch(() => props.modelValue, scrollToSelected)
 
 onMounted(() => {
-  scrollToSelected();
-  window.addEventListener("keydown", handleKeyup);
-});
+  scrollToSelected()
+  window.addEventListener('keydown', handleKeyup)
+})
 onUnmounted(() => {
-  window.removeEventListener("keydown", handleKeyup);
-});
+  window.removeEventListener('keydown', handleKeyup)
+})
 </script>
 
 <template>
@@ -76,7 +76,7 @@ onUnmounted(() => {
       :class="{
         disabled: disabled,
         selected: selectedIndex === index,
-        previous: selectedIndex - 1 === index,
+        previous: selectedIndex - 1 === index
       }"
       ref="suggestionsRefs"
       @click="updateSelected(list)"

@@ -10,29 +10,29 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
-    "type-check": "vue-tsc --noEmit -p tsconfig.app.json --composite false",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "type-check": "vue-tsc --build",
+    "lint": "eslint . --fix",
     "format": "prettier --write src/",
     "deploy": "./deploy.sh"
   },
   "dependencies": {
-    "vue": "3.5.12"
+    "vue": "3.5.13"
   },
   "devDependencies": {
-    "@rushstack/eslint-patch": "1.10.4",
-    "@tsconfig/node18": "18.2.4",
-    "@types/node": "22.8.1",
-    "@vitejs/plugin-vue": "5.1.4",
-    "@vue/eslint-config-prettier": "9.0.0",
-    "@vue/eslint-config-typescript": "13.0.0",
-    "@vue/tsconfig": "0.5.1",
-    "eslint": "^8.49.0",
-    "eslint-plugin-vue": "9.28.0",
-    "npm-run-all2": "6.2.3",
-    "prettier": "3.3.3",
-    "typescript": "5.6.3",
-    "vite": "5.4.10",
-    "vue-tsc": "2.1.6"
-  },
-  "prettier": "@vue/eslint-config-prettier"
+    "@tsconfig/node22": "^22.0.1",
+    "@types/node": "^22.14.1",
+    "@vitejs/plugin-vue": "^5.2.3",
+    "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/eslint-config-typescript": "^14.5.0",
+    "@vue/tsconfig": "^0.7.0",
+    "eslint": "^9.25.0",
+    "eslint-plugin-vue": "~10.0.0",
+    "jiti": "^2.4.2",
+    "npm-run-all2": "^7.0.2",
+    "prettier": "3.5.3",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.2",
+    "vite-plugin-vue-devtools": "^7.7.2",
+    "vue-tsc": "^2.2.8"
+  }
 }

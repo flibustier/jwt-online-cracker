@@ -1,12 +1,12 @@
 @font-face {
-  font-family: "Source Code Pro";
-  src: url("/fonts/SourceCodePro-VariableFont_wght.ttf") format("truetype");
+  font-family: 'Source Code Pro';
+  src: url('/fonts/SourceCodePro-VariableFont_wght.ttf') format('truetype');
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Axeon";
-  src: url("/fonts/Axeon.ttf") format("truetype");
+  font-family: 'Axeon';
+  src: url('/fonts/Axeon.ttf') format('truetype');
   font-display: swap;
 }
 
@@ -61,18 +61,18 @@ body {
   background: var(--color-background);
   line-height: 1.2;
   font-family:
-    "Source Code Pro",
+    'Source Code Pro',
     Inter,
     -apple-system,
     BlinkMacSystemFont,
-    "Segoe UI",
+    'Segoe UI',
     Roboto,
     Oxygen,
     Ubuntu,
     Cantarell,
-    "Fira Sans",
-    "Droid Sans",
-    "Helvetica Neue",
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
     sans-serif;
   font-size: 1rem;
   text-rendering: optimizeLegibility;
@@ -88,7 +88,7 @@ body {
 }
 
 h1 {
-  font-family: "Axeon";
+  font-family: 'Axeon';
 }
 
 a {

@@ -3,8 +3,7 @@
     <template v-if="false">
       <h1 class="accent">JWT Online Cracker</h1>
       <h3>
-        Brute-force <b>HS256</b>, <b>HS384</b> or <b>HS512</b> JWT Token from
-        your browser.<br />
+        Brute-force <b>HS256</b>, <b>HS384</b> or <b>HS512</b> JWT Token from your browser.<br />
         No installation needed.
       </h3>
     </template>

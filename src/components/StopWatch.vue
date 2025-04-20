@@ -1,75 +1,66 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch } from 'vue'
 
-const props = defineProps(["start"]);
+const props = defineProps(['start'])
 
-const timeBegan = ref();
-const timeStopped = ref();
-const running = ref(false);
-const clockInterval = ref();
-const timeElapsed = ref();
+const timeBegan = ref()
+const timeStopped = ref()
+const running = ref(false)
+const clockInterval = ref()
+const timeElapsed = ref()
 
 watch(
   () => props.start,
   () => {
     if (props.start === true) {
-      reset();
-      onStart();
+      reset()
+      onStart()
     } else {
-      onStop();
+      onStop()
     }
-  },
-);
+  }
+)
 
 function onStart() {
   if (running.value) {
-    return;
+    return
   }
 
   if (!timeBegan.value) {
-    reset();
-    timeBegan.value = new Date();
+    reset()
+    timeBegan.value = new Date()
   }
 
-  clockInterval.value = setInterval(clockRunning, 10);
-  running.value = true;
+  clockInterval.value = setInterval(clockRunning, 10)
+  running.value = true
 }
 
 function onStop() {
-  running.value = false;
-  timeStopped.value = new Date();
-  clearInterval(clockInterval.value);
+  running.value = false
+  timeStopped.value = new Date()
+  clearInterval(clockInterval.value)
 }
 
 function reset() {
-  running.value = false;
-  clearInterval(clockInterval.value);
-  timeBegan.value = null;
-  timeStopped.value = null;
+  running.value = false
+  clearInterval(clockInterval.value)
+  timeBegan.value = null
+  timeStopped.value = null
 }
 
 const formattedTime = computed(() => {
-  const hour = timeElapsed.value.getUTCHours();
-  const min = timeElapsed.value.getUTCMinutes();
-  const sec = timeElapsed.value.getUTCSeconds();
-  const ms = timeElapsed.value.getUTCMilliseconds();
+  const hour = timeElapsed.value.getUTCHours()
+  const min = timeElapsed.value.getUTCMinutes()
+  const sec = timeElapsed.value.getUTCSeconds()
+  const ms = timeElapsed.value.getUTCMilliseconds()
 
-  return (
-    zeroPad(hour) +
-    ":" +
-    zeroPad(min) +
-    ":" +
-    zeroPad(sec) +
-    "." +
-    zeroPad(ms, 3)
-  );
-});
+  return zeroPad(hour) + ':' + zeroPad(min) + ':' + zeroPad(sec) + '.' + zeroPad(ms, 3)
+})
 
-const zeroPad = (x: number, padding: number = 2) =>
-  x.toString().padStart(padding, "0");
+const zeroPad = (x: number, padding: number = 2) => x.toString().padStart(padding, '0')
 
 function clockRunning() {
-  timeElapsed.value = new Date((new Date() as any) - timeBegan.value);
+  timeElapsed.value = new Date((new Date() as any) - timeBegan.value)
 }
 </script>
 
@@ -79,12 +70,12 @@ function clockRunning() {
 
 <style scoped>
 @font-face {
-  src: url("/fonts/The Led Display St.ttf");
-  font-family: "Led Display";
+  src: url('/fonts/The Led Display St.ttf');
+  font-family: 'Led Display';
 }
 
 .clock {
-  font-family: "Led Display";
+  font-family: 'Led Display';
   font-size: 2rem;
   color: var(--color-accent);
 }

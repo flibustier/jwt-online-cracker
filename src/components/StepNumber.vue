@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps(["step", "active"]);
+defineProps(['step', 'active'])
 </script>
 
 <template>
