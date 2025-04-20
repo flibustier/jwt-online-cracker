@@ -4,21 +4,24 @@
     </h1>
 </div>
 
-Brute-force HS256, HS384 or HS512 JWT Token from your browser. Using exclusively 100% client-side JavaScript. No installation needed.
+Brute-force HS256, HS384 or HS512 JWT Token from your browser. Using exclusively 100% **client-side** JavaScript. No installation needed.
 
 <div align=center>
-<a href="https://flibustier.github.io/jwt-online-cracker">jwt-online-cracker</a>
+<a href="https://jwt.cracking.ovh">jwt.cracking.ovh</a> 
 </div>
 
 Demo :
 
 https://github.com/user-attachments/assets/61c2abd2-5832-433a-bc92-54411db8860e
 
-Made with [Vue 3](https://vuejs.org) (with TypeScript, 0 dependency) using web workers and a futuristic looking UI.
+Made with [Vue 3](https://vuejs.org) (TypeScript, 0 dependency) using web workers and a futuristic looking UI.
 
 Contributions are welcome!
 
+> Update 04-2025 : The domain has changed from [jwt-cracker.online](https://jwt.cracking.ovh) to [jwt.cracking.ovh](https://jwt.cracking.ovh) 
+
 ## Features
+
 - [x] HS256, HS384, HS512
 - [x] Bruteforcing with custom character set
 - [x] Bruteforcing with custom length
