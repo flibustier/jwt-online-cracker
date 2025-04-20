@@ -1,7 +1,7 @@
 import { Method, store } from './store'
 
 const endpoint = import.meta.env.PROD
-  ? 'https://stats.jwt-cracker.online/complete'
+  ? 'https://api.cracking.ovh/complete'
   : 'http://localhost:8082/complete'
 
 export function dispatchSuccessEvent() {
