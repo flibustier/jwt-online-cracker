@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 
+import CheckBox from './components/CheckBox.vue'
 import TextInput from './components/TextInput.vue'
 import StepNumber from './components/StepNumber.vue'
 import ListSelector from './components/ListSelector.vue'
@@ -317,6 +318,12 @@ setInterval(
         <div class="row" v-if="activeStep === 4" :key="4">
           <StepNumber step="4" :active="true" />
           <div class="container">
+            <CheckBox
+              @update:model-value="(value) => store.setNotification(value)"
+              :model-value="store.withNotification"
+            >
+              Notify when completed
+            </CheckBox>
             <AnimatedButton
               ref="startButtonRef"
               @clicked="onStart"
@@ -370,6 +377,7 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 1rem;
 }
 
 .title {
@@ -400,7 +408,6 @@ h4 {
   font-size: 1.1rem;
   text-align: center;
   text-transform: uppercase;
-  margin-bottom: 1rem;
 }
 
 h4,

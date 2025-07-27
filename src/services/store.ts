@@ -33,6 +33,8 @@ const defaultState = {
   customDictionaryURL: null as string | null,
   isCustomDictionaryLocked: false,
 
+  withNotification: false,
+
   startTime: null as Date | null,
   stopTime: null as Date | null,
 
@@ -93,6 +95,13 @@ export const store = reactive({
       date: new Date().toISOString(),
       method: this.method!
     })
+
+    if (this.withNotification) {
+      new Notification('JWT Secret found!', {
+        body: 'Your JWT secret is ' + this.secret,
+        icon: '/square.png'
+      })
+    }
   },
 
   setMethod(method: Method) {
@@ -105,6 +114,18 @@ export const store = reactive({
     }
     if (method !== Method.dictionaryCustom) {
       this.isCustomDictionaryLocked = false
+    }
+  },
+
+  async setNotification(isEnabled: boolean) {
+    let permission = Notification?.permission
+    if (isEnabled) {
+      if (permission !== 'granted') {
+        permission = await Notification.requestPermission()
+      }
+      this.withNotification = permission === 'granted'
+    } else {
+      this.withNotification = false
     }
   },
 
