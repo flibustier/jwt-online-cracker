@@ -1,0 +1,1 @@
+../../SecLists/Passwords/Common-Credentials/Pwdb_top-10000000.txt

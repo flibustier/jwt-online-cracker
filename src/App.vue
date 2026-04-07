@@ -13,15 +13,15 @@ import RangeSelector from './components/RangeSelector.vue'
 
 import BruteForce from './services/bruteforce'
 import { validateJWT, getAlgorithm } from './services/jwtValidator'
-import { listDictionaries } from './services/dictionaryFetcher'
+import { listDictionaries, dictionaryList } from './services/dictionaryFetcher'
 import { dispatchSuccessEvent } from './services/statistics'
 import { store, Method, hasStarted } from './services/store'
 
 const DEFAULT_DICTIONARY = 'scraped-JWT-secrets.txt'
 const ALPHABET_WARNING_COMPLEXITY_THRESHOLD = 10_000_000
 
-const dictionaryList = ref([] as any[])
 const startButtonRef = ref()
+const dictionaryError = ref()
 
 const isTokenValid = computed(() => validateJWT(store.token)[0])
 const errorOutput = computed(() => validateJWT(store.token)[1])
@@ -39,8 +39,9 @@ const logoAnimationStep = computed(() => {
 })
 
 onMounted(async () => {
-  dictionaryList.value = await listDictionaries()
-  store.dictionarySelected = dictionaryList.value.find((list) => list.name === DEFAULT_DICTIONARY)
+  await listDictionaries()
+  store.dictionarySelected =
+    dictionaryList.value.find((list) => list.name === DEFAULT_DICTIONARY) || dictionaryList.value[0]
 })
 
 /*
@@ -75,12 +76,18 @@ const onStart = async () => {
     }
   )
 
-  if (store.method === Method.dictionary) {
-    bruteForceService.startDictionary(
-      store.dictionarySelected?.dictionaryURL || '',
-      store.dictionarySelected?.rawSize || 0,
-      store.updateDownloadProgress.bind(store)
-    )
+  if (store.method === Method.dictionary || store.method === Method.dictionaryCustom) {
+    try {
+      await bruteForceService.startDictionary(
+        store.dictionarySelected?.dictionaryURL || '',
+        store.dictionarySelected?.rawSize || 0,
+        store.updateDownloadProgress.bind(store)
+      )
+    } catch (error) {
+      bruteForceService.cancel()
+      store.end()
+      dictionaryError.value = error
+    }
   } else if (store.method === Method.alphabet) {
     bruteForceService.startAlphabet(store.alphabetSelected, undefined, store.alphabetMaxLength)
     store.updateDownloadProgress(100)
@@ -104,7 +111,7 @@ const activeStep = computed(() => {
   if (!store.method) {
     return 2
   }
-  if (!store.isDictionaryLocked && !store.isAlphabetLocked) {
+  if (!store.isDictionaryLocked && !store.isAlphabetLocked && !store.isCustomDictionaryLocked) {
     return 3
   }
   return 4
@@ -171,7 +178,8 @@ setInterval(
         <h2>
           <b>{{ tokenAlgorithm }}</b> algorithm supported.<br />
           <span v-if="store.isDictionaryLocked">
-            <b>{{ store.dictionarySelected?.name }}</b> selected.<br />
+            <b style="word-break: break-word">{{ store.dictionarySelected?.name }}</b>
+            selected.<br />
           </span>
           <span v-if="store.method === Method.alphabet">
             <b>{{ alphabetLength }}</b> symbols selected.<br />
@@ -206,6 +214,9 @@ setInterval(
         </div>
         <div v-else class="container">
           <h1 class="warning title-small">Secret not found…</h1>
+          <h2 v-if="dictionaryError">
+            <b>{{ dictionaryError }}</b>
+          </h2>
         </div>
         <AnimatedButton @clicked="store.reset()" content="Restart" />
       </div>
@@ -249,6 +260,16 @@ setInterval(
                 content="Dictionary (faster)"
                 @clicked="store.setMethod(Method.dictionary)"
                 :is-selected="store.method === Method.dictionary"
+              />
+              <AnimatedButton
+                content="Custom Dictionary"
+                @clicked="
+                  () => {
+                    store.setMethod(Method.dictionaryCustom)
+                    store.setDictionaryURL()
+                  }
+                "
+                :is-selected="store.method === Method.dictionaryCustom"
               />
               <AnimatedButton
                 content="Alphabet"
@@ -312,6 +333,30 @@ setInterval(
             @clicked="store.isAlphabetLocked = true"
             @clicked-cancel="store.isAlphabetLocked = false"
             :canceled="store.isAlphabetLocked"
+          />
+        </div>
+        <div
+          class="row"
+          v-if="store.isTokenLocked && store.method === Method.dictionaryCustom"
+          :key="3.3"
+        >
+          <StepNumber step="3" :active="activeStep === 3" />
+          <div class="container">
+            <h4>Insert your dictionary URL</h4>
+            <TextInput
+              :model-value="store.dictionarySelected?.dictionaryURL"
+              @update:model-value="(value) => store.setDictionaryURL(value)"
+              :rows="1"
+              placeholder="https://example.com/dictionary.txt"
+              :disabled="store.isCustomDictionaryLocked"
+              @submit="store.isCustomDictionaryLocked = true"
+            />
+          </div>
+          <AnimatedButton
+            content="Confirm"
+            @clicked="store.isCustomDictionaryLocked = true"
+            @clicked-cancel="store.isCustomDictionaryLocked = false"
+            :canceled="store.isCustomDictionaryLocked"
           />
         </div>
 
