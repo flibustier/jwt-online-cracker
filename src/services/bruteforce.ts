@@ -19,7 +19,10 @@ export default class BruteForce {
   private wordsRemaining = 0
   private isDone = false
 
-  private initWorkers = (onProgress: Function, onSucceeded: Function) => {
+  private initWorkers = (
+    onProgress: (progressPercent: number, sample?: string) => void,
+    onSucceeded: (secret: string) => void
+  ) => {
     this.workerPool = new Array<Worker>((navigator.hardwareConcurrency || 1) * WORKER_PER_THREAD)
     this.workerPool.fill(new Worker()).forEach(
       (worker) =>
@@ -82,7 +85,12 @@ export default class BruteForce {
     )
   }
 
-  constructor(algorithm: string, token: string, onProgress: Function, onSucceeded: Function) {
+  constructor(
+    algorithm: string,
+    token: string,
+    onProgress: (progressPercent: number, sample?: string) => void,
+    onSucceeded: (secret: string) => void
+  ) {
     this.token = token
     this.algorithm = algorithm
     this.initWorkers(onProgress, onSucceeded)
@@ -108,7 +116,7 @@ export default class BruteForce {
   public startDictionary = async (
     dictionaryURL: string,
     dictionarySize: number,
-    onDownloadProgress: Function
+    onDownloadProgress: (downloadPercent: number) => void
   ) => {
     this.downloaded = 0
     this.wordsRemaining = 0

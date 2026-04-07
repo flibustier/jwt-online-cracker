@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps(['modelValue', 'placeholder', 'disabled'])
+const props = defineProps(['modelValue', 'placeholder', 'disabled', 'rows'])
 defineEmits(['update:modelValue', 'submit'])
 
-const rows = computed(() => (props.modelValue ? 5 : 5))
+const rows = computed(() => (props.rows ? props.rows : 5))
 </script>
 
 <template>

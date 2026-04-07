@@ -9,10 +9,11 @@ export enum Method {
   dictionaryCustom = 'custom'
 }
 
-interface Dictionary {
+export interface Dictionary {
   name: string
   dictionaryURL: string
   rawSize: number
+  size?: string
 }
 
 const defaultState = {
@@ -115,6 +116,20 @@ export const store = reactive({
     if (method !== Method.dictionaryCustom) {
       this.isCustomDictionaryLocked = false
     }
+  },
+
+  setDictionaryURL(dictionaryURL: string = '') {
+    console.log('setDictionaryURL', dictionaryURL) // Debug log to check the value of dictionaryURL
+
+    if (!this.dictionarySelected || dictionaryURL === '') {
+      this.dictionarySelected = {
+        name: '',
+        dictionaryURL: '',
+        rawSize: 0
+      }
+    }
+    this.dictionarySelected.dictionaryURL = dictionaryURL
+    this.dictionarySelected.name = dictionaryURL.split('/').pop() || ''
   },
 
   async setNotification(isEnabled: boolean) {
