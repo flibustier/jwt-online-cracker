@@ -46,6 +46,8 @@ const defaultState = {
   lastWord: ''
 }
 
+let lastWordUpdateTime = 0
+
 export const store = reactive({
   ...defaultState,
 
@@ -73,6 +75,7 @@ export const store = reactive({
     this.downloadPercent = 0
     this.progressPercent = 0
     this.lastWord = ''
+    lastWordUpdateTime = 0
   },
 
   start() {
@@ -149,8 +152,10 @@ export const store = reactive({
   },
 
   updateGlobalProgress(progressPercent: number, sample?: string) {
-    if (sample) {
+    const now = Date.now()
+    if (sample && (now - lastWordUpdateTime > 100 || progressPercent === 100)) {
       this.lastWord = sample
+      lastWordUpdateTime = now
     }
     this.progressPercent = progressPercent
     if (progressPercent === 100) {

@@ -11,16 +11,21 @@ const CreateHmacFunction = (hashAlgorithm: string, content: string) => {
   const encodedHeader = utf8encoder.encode(content)
 
   return async (secret: string) => {
+    const trimmedSecret = secret.replace(/\r$/, '')
+    if (trimmedSecret.length === 0) {
+      return ''
+    }
+
     try {
       const key = await crypto.subtle.importKey(
         'raw',
-        utf8encoder.encode(secret),
+        utf8encoder.encode(trimmedSecret),
         algorithm,
         false,
         ['sign']
       )
 
-      const signature = await crypto.subtle.sign(algorithm.name, key, encodedHeader)
+      const signature = await crypto.subtle.sign(algorithm, key, encodedHeader)
 
       return btoa(String.fromCharCode(...new Uint8Array(signature)))
         .replace(/=/g, '')
@@ -49,14 +54,24 @@ onmessage = (e) => {
 
   const hmac = CreateHmacFunction(HASH_ALGORITHM[algorithm], content)
 
-  Promise.all(
-    words.map(async (word) => {
+  const processWords = async () => {
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i]
       const forgedSignature = await hmac(word)
 
       if (forgedSignature === signature) {
         console.info('Secret found :', word)
         postMessage({ secretFound: word })
       }
-    })
-  ).then(() => postMessage({ isDone: true, batchSize: words.length, sample: words[0] }))
+
+      // Send progress every 1000 words to reduce main thread overhead
+      if (i > 0 && i % 1000 === 0) {
+        postMessage({ isProgress: true, batchSize: 1000, sample: word })
+      }
+    }
+    const remainingInBatch = words.length % 1000 || 1000
+    postMessage({ isDone: true, batchSize: remainingInBatch, sample: words[words.length - 1] })
+  }
+
+  processWords()
 }

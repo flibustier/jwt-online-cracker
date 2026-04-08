@@ -211,6 +211,10 @@ setInterval(
           <h2>
             <b>{{ store.secret }}</b>
           </h2>
+          <p style="margin-top: 2rem">
+            Star this project on
+            <a href="https://github.com/flibustier/jwt-online-cracker" target="_blank">GitHub</a>!
+          </p>
         </div>
         <div v-else class="container">
           <h1 class="warning title-small">Secret not found…</h1>

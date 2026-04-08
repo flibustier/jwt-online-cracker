@@ -4,7 +4,9 @@ const decodeHeader = (token: string) => {
   const parts = token.split('.')
 
   try {
-    const decodedHeader = JSON.parse(atob(parts[0]))
+    const base64 = parts[0].replace(/-/g, '+').replace(/_/g, '/')
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=')
+    const decodedHeader = JSON.parse(atob(padded))
 
     return decodedHeader
   } catch {
@@ -37,8 +39,8 @@ const validateGeneralJwtFormat = (token: string) => {
 const validateHmacAlgorithmHeader = (token: string) => {
   const decodedHeader = decodeHeader(token)
 
-  if (decodedHeader.typ !== 'JWT') {
-    throw `Unsupported Typ: <b class="warning">${decodedHeader.typ}<b> (<b>JWT</b> expected here)`
+  if (decodedHeader.typ && decodedHeader.typ !== 'JWT') {
+    throw `Unsupported Typ: <b class="warning">${decodedHeader.typ}</b> (<b>JWT</b> expected here)`
   }
 
   if (!SUPPORTED_ALGORITHM.includes(decodedHeader.alg)) {

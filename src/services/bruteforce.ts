@@ -9,6 +9,8 @@ const WORKER_PER_THREAD = 1
 export default class BruteForce {
   private workerPool: Worker[] = []
   private combinatorWorker: Worker = new CombinatorWorker()
+  private workerReadyResolvers: (() => void)[] = []
+  private availableWorkerIndices: number[] = []
 
   private algorithm: string = ''
   private token: string = ''
@@ -23,23 +25,37 @@ export default class BruteForce {
     onProgress: (progressPercent: number, sample?: string) => void,
     onSucceeded: (secret: string) => void
   ) => {
-    this.workerPool = new Array<Worker>((navigator.hardwareConcurrency || 1) * WORKER_PER_THREAD)
-    this.workerPool.fill(new Worker()).forEach(
-      (worker) =>
+    const workerCount = (navigator.hardwareConcurrency || 1) * WORKER_PER_THREAD
+    this.workerPool = Array.from({ length: workerCount }, () => new Worker())
+    this.availableWorkerIndices = Array.from({ length: workerCount }, (_, i) => i)
+
+    this.workerPool.forEach(
+      (worker, index) =>
         (worker.onmessage = (e) => {
-          const { isDone, batchSize, secretFound, sample } = e.data
+          const { isDone, isProgress, batchSize, secretFound, sample } = e.data
 
           if (secretFound) {
             onSucceeded(secretFound)
             this.cancel()
           }
 
-          if (isDone) {
+          if (isProgress || isDone) {
             this.wordsDone = batchSize + this.wordsDone
             onProgress(this.globalProgress, sample)
           }
+
+          if (isDone) {
+            this.availableWorkerIndices.push(index)
+            const resolver = this.workerReadyResolvers.shift()
+            if (resolver) resolver()
+          }
         })
     )
+  }
+
+  private waitForWorker = () => {
+    if (this.availableWorkerIndices.length > 0) return Promise.resolve()
+    return new Promise<void>((resolve) => this.workerReadyResolvers.push(resolve))
   }
 
   private sendSliceToWorker = (workerIndex: number, slice: string[]) => {
@@ -50,28 +66,21 @@ export default class BruteForce {
         words: slice,
         id: workerIndex
       })
-    } else {
-      console.debug('stop received : ignoring new messages')
     }
   }
 
-  private dispatchWordsToWorkers = (words: string[]) => {
-    if (words.length > 0) {
-      const wordsPerWorker = Math.floor(words.length / this.workerPool.length)
-      this.workerPool.forEach((_worker, index) => {
-        const sliceStart = index * wordsPerWorker
-        // last worker get all remaining
-        const sliceEnd =
-          index === this.workerPool.length - 1 ? undefined : (index + 1) * wordsPerWorker
-        const slice = words.slice(sliceStart, sliceEnd)
+  private dispatchWordsToWorkers = async (words: string[]) => {
+    if (words.length === 0) return
 
-        // if slice is too big, we send it in multiple smaller chunks
-        for (let i = 0; i < slice.length; i += MAX_WORKER_SLICE) {
-          const chunk = slice.slice(i, i + MAX_WORKER_SLICE)
-          this.sendSliceToWorker(index, chunk)
-          this.wordsSent += chunk.length
-        }
-      })
+    for (let i = 0; i < words.length; i += MAX_WORKER_SLICE) {
+      if (this.isDone) break
+      await this.waitForWorker()
+      if (this.isDone) break
+
+      const chunk = words.slice(i, i + MAX_WORKER_SLICE)
+      const workerIndex = this.availableWorkerIndices.shift()!
+      this.sendSliceToWorker(workerIndex, chunk)
+      this.wordsSent += chunk.length
     }
   }
 
@@ -79,10 +88,13 @@ export default class BruteForce {
     return Math.trunc((this.downloaded / this.dictionarySize) * 100)
   }
   private get globalProgress() {
-    return Math.trunc(
+    if (this.wordsRemaining === 0) return 0
+    const progress = Math.trunc(
       (this.wordsDone / this.wordsRemaining) *
         (this.dictionarySize > 0 ? this.downloadPercent : 100)
     )
+
+    return Math.min(progress, 100)
   }
 
   constructor(
@@ -128,21 +140,23 @@ export default class BruteForce {
 
     let splitWord
     for await (const chunk of response.body as any) {
-      let words = utf8decoder.decode(chunk).split('\n')
+      if (this.isDone) break
+
+      let words = utf8decoder.decode(chunk, { stream: true }).split('\n')
       if (splitWord) {
         words = [splitWord + words.shift(), ...words]
       }
       splitWord = words.pop()
 
-      this.dispatchWordsToWorkers(words)
-
       this.wordsRemaining += words.length
       this.downloaded += chunk.length
       onDownloadProgress(this.downloadPercent)
+
+      await this.dispatchWordsToWorkers(words)
     }
 
-    if (splitWord) {
-      this.sendSliceToWorker(0, [splitWord])
+    if (splitWord && !this.isDone) {
+      await this.dispatchWordsToWorkers([splitWord])
     }
   }
 
@@ -150,5 +164,6 @@ export default class BruteForce {
     this.isDone = true
     this.workerPool.forEach((worker) => worker.terminate())
     this.combinatorWorker?.terminate()
+    this.workerReadyResolvers.forEach((resolve) => resolve())
   }
 }
