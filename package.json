@@ -16,9 +16,11 @@
     "deploy": "./deploy.sh"
   },
   "dependencies": {
+    "@sentry/browser": "11.10.0",
     "vue": "3.5.32"
   },
   "devDependencies": {
+    "@sentry/cli": "3.8.2",
     "@tsconfig/node22": "^22.0.5",
     "@types/node": "^25.5.2",
     "@vitejs/plugin-vue": "^6.0.5",

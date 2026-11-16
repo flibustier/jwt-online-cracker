@@ -7,6 +7,9 @@ cdate=$(date +"%m-%d-%Y")
 
 yarn build
 
+# Source maps go to Bugsink, not to the site
+./sourcemaps.sh
+
 cd dist
 
 git add -A .

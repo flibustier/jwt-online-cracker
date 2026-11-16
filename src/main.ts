@@ -2,5 +2,8 @@ import './assets/main.css'
 
 import { createApp } from 'vue'
 import App from './App.vue'
+import { trackErrors } from './services/errors'
 
-createApp(App).mount('#app')
+const app = createApp(App)
+trackErrors(app)
+app.mount('#app')
