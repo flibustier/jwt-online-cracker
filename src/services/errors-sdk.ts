@@ -9,17 +9,17 @@ import {
 } from '@sentry/browser'
 
 // Loaded by errors.ts after the first error only. This file keeps the same name from one deploy to
-// the next (vite.config.mts), so a tab opened before a deploy can still load it.
-
-const DSN = 'https://8a78334dfb1f414f8a73a1964d8a638e@bug.cracking.ovh/2'
+// the next (vite.config.mts), so a tab opened before a deploy can still load it. It imports nothing
+// from the app (the DSN comes from errors.ts): otherwise, in an old tab, it would load the main
+// chunk of the new deploy.
 
 // A token pasted by a visitor never leaves in a report: anything shaped like a JWT is masked
 const JWT = /eyJ[\w-]*(\.[\w-]*){0,2}/g
 const mask = (text?: string) => text?.replace(JWT, '[jwt]')
 
-export const start = () => {
+export const start = (dsn: string) => {
   const client = new BrowserClient({
-    dsn: DSN,
+    dsn,
     environment: location.hostname === 'jwt.cracking.ovh' ? 'production' : 'local',
     transport: makeFetchTransport,
     stackParser: defaultStackParser,
