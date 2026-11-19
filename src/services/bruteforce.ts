@@ -1,5 +1,6 @@
 import Worker from './hmacWorker?worker'
 import CombinatorWorker from './combinator?worker'
+import { watchWorker } from './errors'
 
 const utf8decoder = new TextDecoder()
 
@@ -8,7 +9,7 @@ const WORKER_PER_THREAD = 1
 
 export default class BruteForce {
   private workerPool: Worker[] = []
-  private combinatorWorker: Worker = new CombinatorWorker()
+  private combinatorWorker: Worker = this.watched(new CombinatorWorker(), 'combinator')
   private workerReadyResolvers: (() => void)[] = []
   private availableWorkerIndices: number[] = []
 
@@ -21,12 +22,17 @@ export default class BruteForce {
   private wordsRemaining = 0
   private isDone = false
 
+  private watched(worker: Worker, name: string) {
+    watchWorker(worker, name)
+    return worker
+  }
+
   private initWorkers = (
     onProgress: (progressPercent: number, sample?: string) => void,
     onSucceeded: (secret: string) => void
   ) => {
     const workerCount = (navigator.hardwareConcurrency || 1) * WORKER_PER_THREAD
-    this.workerPool = Array.from({ length: workerCount }, () => new Worker())
+    this.workerPool = Array.from({ length: workerCount }, () => this.watched(new Worker(), 'hmac'))
     this.availableWorkerIndices = Array.from({ length: workerCount }, (_, i) => i)
 
     this.workerPool.forEach(

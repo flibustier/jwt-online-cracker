@@ -1,3 +1,5 @@
+import './workerErrors'
+
 interface IteratorResult {
   value: string[]
   done: boolean

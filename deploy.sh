@@ -12,6 +12,9 @@ yarn build
 
 cd dist
 
+# The files of the previous builds stay a week, for the tabs opened before
+../keep-old-assets.sh assets
+
 git add -A .
 git commit -m $cdate
 

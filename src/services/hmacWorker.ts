@@ -1,3 +1,5 @@
+import './workerErrors'
+
 const HASH_ALGORITHM = {
   HS256: 'SHA-256',
   HS384: 'SHA-384',
